@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
@@ -82,8 +83,15 @@ export function SiteHeader() {
           <Menu />
         </Button>
 
-        <Link href={routes.home} className="shrink-0 text-base font-semibold tracking-tight">
-          {siteConfig.name}
+        <Link href={routes.home} className="flex shrink-0 items-center" aria-label={siteConfig.name}>
+          <Image
+            src="/logo.png"
+            alt={siteConfig.name}
+            width={168}
+            height={84}
+            preload
+            className="h-10 w-auto"
+          />
         </Link>
 
         <form onSubmit={onSearch} className="relative hidden min-w-0 flex-1 md:block">
@@ -151,7 +159,15 @@ export function SiteHeader() {
       <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
         <SheetContent side="left" className="w-[min(100%,20rem)] p-0">
           <SheetHeader>
-            <SheetTitle>{siteConfig.name}</SheetTitle>
+            <SheetTitle className="flex items-center">
+              <Image
+                src="/logo.png"
+                alt={siteConfig.name}
+                width={168}
+                height={84}
+                className="h-9 w-auto"
+              />
+            </SheetTitle>
           </SheetHeader>
           <form onSubmit={onSearch} className="px-4">
             <Input

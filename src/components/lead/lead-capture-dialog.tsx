@@ -20,7 +20,6 @@ import {
   type LeadInterest,
 } from "@/constants/leads";
 import { LOCAL_STORAGE_KEYS } from "@/constants/storage";
-import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { createLeadSchema } from "@/validators/lead";
 
 type LeadCaptureDialogProps = {
@@ -72,29 +71,12 @@ export function LeadCaptureDialog({ open, onOpenChange }: LeadCaptureDialogProps
       return;
     }
 
-    const interest = parsed.data.interestedCategory
-      ? LEAD_INTEREST_LABELS[parsed.data.interestedCategory]
-      : "a product";
-    const whatsapp = buildWhatsAppUrl(
-      [
-        "Hi GadgetCenter, I need help choosing a product.",
-        `Name: ${parsed.data.name}`,
-        `Mobile: ${parsed.data.mobile}`,
-        `Address: ${parsed.data.address}`,
-        `Interested in: ${interest}`,
-      ].join("\n"),
-    );
-
     window.localStorage.setItem(LOCAL_STORAGE_KEYS.leadSubmitted, "1");
     document.cookie = `${LOCAL_STORAGE_KEYS.leadSubmitted}=1; path=/; max-age=15552000; samesite=lax`;
-    toast.success("Thanks. Continue on WhatsApp or browse the store.");
+    toast.success("Thanks. Our team will contact you shortly.");
     setForm(emptyForm);
     setSubmitting(false);
     onOpenChange(false);
-
-    if (whatsapp) {
-      window.open(whatsapp, "_blank", "noopener,noreferrer");
-    }
   }
 
   return (
@@ -169,7 +151,7 @@ export function LeadCaptureDialog({ open, onOpenChange }: LeadCaptureDialogProps
             </select>
           </div>
           <Button type="submit" className="mt-1 h-10" disabled={submitting}>
-            {submitting ? "Opening WhatsApp..." : "Continue Shopping"}
+            {submitting ? "Submitting..." : "Continue Shopping"}
           </Button>
         </form>
       </DialogContent>
