@@ -132,6 +132,7 @@ export function ProductsScreen() {
       toast.error("That product URL slug is already used.");
       return;
     }
+    const current = editingId ? catalog.products.find((item) => item.id === editingId) : undefined;
     saveProduct({
       id: editingId || createRecordId("p"),
       sku,
@@ -151,7 +152,9 @@ export function ProductsScreen() {
       bestseller: form.bestseller,
       newArrival: form.newArrival,
       inStock: onHand > 0,
-      accent: "navy",
+      accent: current?.accent ?? "navy",
+      image: current?.image,
+      images: current?.images,
       onHand: Number.isFinite(onHand) ? Math.max(0, onHand) : 0,
     });
     toast.success(editingId ? "Product updated." : "Product added. It will show in the store catalog.");

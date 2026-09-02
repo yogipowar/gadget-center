@@ -20,6 +20,8 @@ export type CatalogProduct = {
   newArrival: boolean;
   inStock: boolean;
   accent: "navy" | "slate" | "teal" | "stone";
+  image?: string;
+  images?: string[];
 };
 
 export type CatalogQuery = {

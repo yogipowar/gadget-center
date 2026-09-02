@@ -9,11 +9,11 @@ import { ProductGrid } from "@/components/product/product-grid";
 import { buttonVariants } from "@/components/ui/button";
 import { routes } from "@/config/routes";
 import {
-  additionalCategories,
   budgetBands,
-  computerCategories,
   laptopBrands,
+  pickDiverseCatalog,
   queryCatalog,
+  shopCategories,
 } from "@/features/catalog/queries";
 import { cn } from "@/lib/utils";
 
@@ -39,47 +39,26 @@ function SectionHeading({
 }
 
 export default function HomePage() {
-  const featured = queryCatalog({ featured: true }).slice(0, 4);
-  const arrivals = queryCatalog({ newArrival: true }).slice(0, 4);
-  const refurbished = queryCatalog({ refurbished: true }).slice(0, 4);
+  const featured = pickDiverseCatalog(queryCatalog({ featured: true }), 8);
+  const arrivals = pickDiverseCatalog(queryCatalog({ newArrival: true }), 8);
+  const refurbished = pickDiverseCatalog(queryCatalog({ refurbished: true }), 8);
   const bestLaptops = queryCatalog({ productType: "LAPTOP", bestseller: true }).slice(0, 4);
 
   return (
-    <div className="flex flex-col gap-14 pb-16">
+    <div className="flex flex-col gap-10 pb-16">
       <HomeLeadGate />
       <HomeHero />
 
       <section className="mx-auto w-full max-w-6xl px-4">
-        <SectionHeading title="Shop computers" />
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-          {computerCategories.map((category) => (
+        <SectionHeading title="Shop by category" href={routes.products} action="All products" />
+        <div className="flex flex-wrap gap-2">
+          {shopCategories.map((category) => (
             <Link
               key={category.slug}
               href={category.href}
-              className="rounded-xl border border-border p-4 transition-colors hover:bg-muted/50"
+              className="rounded-full border border-border px-3.5 py-1.5 text-sm hover:bg-muted"
             >
-              <p className="text-sm font-semibold">{category.title}</p>
-              <p className="mt-1 text-xs leading-5 text-muted-foreground">{category.description}</p>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="mx-auto w-full max-w-6xl px-4">
-        <SectionHeading title="Also available" href={routes.products} action="All products" />
-        <p className="mb-5 max-w-2xl text-sm leading-6 text-muted-foreground">
-          Along with laptops and computers we supply printers, UPS, CCTV, home electronics, pro
-          audio and robotics.
-        </p>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-          {additionalCategories.map((category) => (
-            <Link
-              key={category.slug}
-              href={category.href}
-              className="rounded-xl border border-border p-4 transition-colors hover:bg-muted/50"
-            >
-              <p className="text-sm font-semibold">{category.title}</p>
-              <p className="mt-1 text-xs leading-5 text-muted-foreground">{category.description}</p>
+              {category.title}
             </Link>
           ))}
         </div>
@@ -91,7 +70,7 @@ export default function HomePage() {
       </section>
 
       <section className="mx-auto w-full max-w-6xl px-4">
-        <SectionHeading title="New arrivals" href={routes.laptops} />
+        <SectionHeading title="New arrivals" href={routes.products} />
         <ProductGrid products={arrivals} />
       </section>
 

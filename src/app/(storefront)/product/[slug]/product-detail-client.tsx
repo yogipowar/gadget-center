@@ -1,10 +1,20 @@
 "use client";
 
+import Link from "next/link";
+
 import { ProductBuyBox } from "@/components/product/product-buy-box";
-import { ProductMedia } from "@/components/product/product-media";
+import { ProductGallery } from "@/components/product/product-gallery";
+import { ProductGrid } from "@/components/product/product-grid";
 import { Badge } from "@/components/ui/badge";
+import { routes } from "@/config/routes";
 import { useAdminCatalog } from "@/features/admin/catalog-store";
-import { conditionLabel, getProductBySlug } from "@/features/catalog/queries";
+import {
+  conditionLabel,
+  getProductBySlug,
+  productGallery,
+  relatedProducts,
+  shopCategories,
+} from "@/features/catalog/queries";
 import { formatInr, discountPercent } from "@/utils/currency";
 
 export function ProductDetailClient({ slug }: { slug: string }) {
@@ -23,12 +33,17 @@ export function ProductDetailClient({ slug }: { slug: string }) {
   }
 
   const discount = discountPercent(product.price, product.salePrice);
+  const related = relatedProducts(product, catalog.products);
+  const relatedCategory = shopCategories.find((item) => item.slug === product.categorySlug);
 
   return (
-    <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-8 lg:grid-cols-2">
-      <div className="overflow-hidden rounded-xl border border-border">
-        <ProductMedia accent={product.accent} name={product.name} className="aspect-[4/3] min-h-64" />
-      </div>
+    <div className="mx-auto w-full max-w-6xl px-4 py-8">
+      <div className="grid gap-8 overflow-visible lg:grid-cols-2">
+      <ProductGallery
+        images={productGallery(product)}
+        name={product.name}
+        accent={product.accent}
+      />
       <div>
         <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
           {product.brand} · {product.sku}
@@ -80,6 +95,22 @@ export function ProductDetailClient({ slug }: { slug: string }) {
           </div>
         ) : null}
       </div>
+      </div>
+
+      {related.length > 0 ? (
+        <section className="mt-12">
+          <div className="mb-5 flex items-end justify-between gap-3">
+            <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">Related products</h2>
+            <Link
+              href={relatedCategory?.href ?? routes.products}
+              className="text-sm font-medium text-muted-foreground hover:text-foreground"
+            >
+              View all
+            </Link>
+          </div>
+          <ProductGrid products={related} />
+        </section>
+      ) : null}
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Laptop } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -12,20 +13,43 @@ const accentClass: Record<"navy" | "slate" | "teal" | "stone", string> = {
 type ProductMediaProps = {
   accent: keyof typeof accentClass;
   name: string;
+  image?: string;
   className?: string;
+  compact?: boolean;
 };
 
-export function ProductMedia({ accent, name, className }: ProductMediaProps) {
+export function ProductMedia({
+  accent,
+  name,
+  image,
+  className,
+  compact = false,
+}: ProductMediaProps) {
   return (
     <div
       className={cn(
-        "relative flex aspect-[4/3] items-center justify-center",
-        accentClass[accent],
+        "relative overflow-hidden",
+        compact ? "aspect-[16/10]" : "aspect-[4/3]",
+        image ? "bg-zinc-100" : accentClass[accent],
         className,
       )}
     >
-      <Laptop className="size-16 text-white/80 sm:size-20" strokeWidth={1.25} />
-      <span className="sr-only">{name}</span>
+      {image ? (
+        <Image
+          src={image}
+          alt={name}
+          fill
+          sizes={compact ? "(max-width: 1024px) 50vw, 240px" : "(max-width: 1024px) 100vw, 560px"}
+          className="object-contain"
+        />
+      ) : (
+        <div className="flex h-full items-center justify-center">
+          <Laptop
+            className={cn("text-white/80", compact ? "size-9 sm:size-11" : "size-16 sm:size-20")}
+            strokeWidth={1.25}
+          />
+        </div>
+      )}
     </div>
   );
 }

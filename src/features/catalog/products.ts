@@ -24,6 +24,7 @@ export const catalogProducts: CatalogProduct[] = [
     newArrival: true,
     inStock: true,
     accent: "navy",
+    image: "/products/dell-inspiron-15-3530.png",
   },
   {
     id: "p-hp-pavilion-14",
@@ -44,6 +45,7 @@ export const catalogProducts: CatalogProduct[] = [
     newArrival: true,
     inStock: true,
     accent: "slate",
+    image: "/products/hp-pavilion-14-dv2015tu.png",
   },
   {
     id: "p-lenovo-ideapad-slim3",
@@ -64,6 +66,7 @@ export const catalogProducts: CatalogProduct[] = [
     newArrival: true,
     inStock: true,
     accent: "teal",
+    image: "/products/lenovo-ideapad-slim-3.png",
   },
   {
     id: "p-asus-vivobook-15",
@@ -84,6 +87,7 @@ export const catalogProducts: CatalogProduct[] = [
     newArrival: false,
     inStock: true,
     accent: "navy",
+    image: "/products/asus-vivobook-15-x1504va.png",
   },
   {
     id: "p-hp-elitebook-840-g7",
@@ -105,6 +109,7 @@ export const catalogProducts: CatalogProduct[] = [
     newArrival: false,
     inStock: true,
     accent: "stone",
+    image: "/products/hp-elitebook-840-g7-refurbished.png",
   },
   {
     id: "p-dell-latitude-5410",
@@ -126,6 +131,7 @@ export const catalogProducts: CatalogProduct[] = [
     newArrival: true,
     inStock: true,
     accent: "slate",
+    image: "/products/dell-latitude-5410-refurbished.png",
   },
   {
     id: "p-lenovo-thinkpad-t14",
@@ -147,6 +153,7 @@ export const catalogProducts: CatalogProduct[] = [
     newArrival: true,
     inStock: true,
     accent: "navy",
+    image: "/products/lenovo-thinkpad-t14-refurbished.png",
   },
   {
     id: "p-hp-probook-450-g8",
@@ -168,6 +175,7 @@ export const catalogProducts: CatalogProduct[] = [
     newArrival: false,
     inStock: true,
     accent: "stone",
+    image: "/products/hp-probook-450-g8-refurbished.png",
   },
   {
     id: "p-acer-aspire-3",
@@ -188,6 +196,7 @@ export const catalogProducts: CatalogProduct[] = [
     newArrival: true,
     inStock: true,
     accent: "teal",
+    image: "/products/acer-aspire-3.png",
   },
   {
     id: "p-custom-ryzen5",
@@ -208,6 +217,7 @@ export const catalogProducts: CatalogProduct[] = [
     newArrival: true,
     inStock: true,
     accent: "navy",
+    image: "/products/custom-pc-ryzen-5-5600-rtx-3060.png",
   },
   {
     id: "p-dell-optiplex-7080",
@@ -229,6 +239,7 @@ export const catalogProducts: CatalogProduct[] = [
     newArrival: false,
     inStock: true,
     accent: "slate",
+    image: "/products/dell-optiplex-7080-refurbished.png",
   },
   {
     id: "p-hp-prodesk-400",
@@ -246,9 +257,10 @@ export const catalogProducts: CatalogProduct[] = [
     shortDescription: "New small-office desktop for billing and accounts.",
     featured: false,
     bestseller: false,
-    newArrival: false,
+    newArrival: true,
     inStock: true,
     accent: "stone",
+    image: "/products/hp-prodesk-400-g6.png",
   },
   {
     id: "p-msi-thin-15",
@@ -269,6 +281,7 @@ export const catalogProducts: CatalogProduct[] = [
     newArrival: true,
     inStock: true,
     accent: "navy",
+    image: "/products/msi-thin-15-b13uc.png",
   },
   {
     id: "p-logitech-mx-keys",
@@ -289,6 +302,7 @@ export const catalogProducts: CatalogProduct[] = [
     newArrival: false,
     inStock: true,
     accent: "slate",
+    image: "/products/logitech-mx-keys.png",
   },
   {
     id: "p-samsung-24-monitor",
@@ -304,11 +318,12 @@ export const catalogProducts: CatalogProduct[] = [
     warranty: "3 Year brand warranty",
     specs: ["24\" IPS", "75Hz", "HDMI + VGA"],
     shortDescription: "Full HD monitor for laptops and desktop PCs.",
-    featured: false,
+    featured: true,
     bestseller: true,
     newArrival: false,
     inStock: true,
     accent: "teal",
+    image: "/products/samsung-24-inch-monitor.png",
   },
   {
     id: "p-kingston-16gb-ram",
@@ -329,6 +344,7 @@ export const catalogProducts: CatalogProduct[] = [
     newArrival: false,
     inStock: true,
     accent: "stone",
+    image: "/products/kingston-16gb-ddr4-ram.png",
   },
   {
     id: "p-logitech-m331",
@@ -349,6 +365,7 @@ export const catalogProducts: CatalogProduct[] = [
     newArrival: false,
     inStock: true,
     accent: "slate",
+    image: "/products/logitech-m331-silent-mouse.png",
   },
   {
     id: "p-hdmi-cable-2m",
@@ -369,6 +386,7 @@ export const catalogProducts: CatalogProduct[] = [
     newArrival: false,
     inStock: true,
     accent: "stone",
+    image: "/products/hdmi-cable-2-metre.png",
   },
   {
     id: "p-hp-laserjet-m111w",
@@ -389,6 +407,7 @@ export const catalogProducts: CatalogProduct[] = [
     newArrival: false,
     inStock: true,
     accent: "navy",
+    image: "/products/hp-laserjet-m111w.png",
   },
   {
     id: "p-canon-g3012",
@@ -409,6 +428,7 @@ export const catalogProducts: CatalogProduct[] = [
     newArrival: true,
     inStock: true,
     accent: "teal",
+    image: "/products/canon-pixma-g3012.png",
   },
   {
     id: "p-apc-bx600c",
@@ -424,11 +444,12 @@ export const catalogProducts: CatalogProduct[] = [
     warranty: "2 Year brand warranty",
     specs: ["600VA", "360W", "2 outlets"],
     shortDescription: "Backup power for a desktop PC and router during short cuts.",
-    featured: false,
+    featured: true,
     bestseller: true,
     newArrival: false,
     inStock: true,
     accent: "slate",
+    image: "/products/apc-bx600c-i-ups.png",
   },
   {
     id: "p-wd-ssd-500",
@@ -449,6 +470,7 @@ export const catalogProducts: CatalogProduct[] = [
     newArrival: false,
     inStock: true,
     accent: "navy",
+    image: "/products/wd-green-500gb-ssd.png",
   },
   {
     id: "p-tplink-archer-c6",
@@ -464,11 +486,12 @@ export const catalogProducts: CatalogProduct[] = [
     warranty: "3 Year brand warranty",
     specs: ["AC1200", "Dual band", "4 antennas"],
     shortDescription: "Wi-Fi router for home and small office networks.",
-    featured: false,
+    featured: true,
     bestseller: true,
-    newArrival: false,
+    newArrival: true,
     inStock: true,
     accent: "teal",
+    image: "/products/tp-link-archer-c6.png",
   },
   {
     id: "p-hikvision-dome",
@@ -489,6 +512,7 @@ export const catalogProducts: CatalogProduct[] = [
     newArrival: false,
     inStock: true,
     accent: "stone",
+    image: "/products/hikvision-2mp-dome-camera.png",
   },
   {
     id: "p-cctv-4ch-kit",
@@ -509,6 +533,7 @@ export const catalogProducts: CatalogProduct[] = [
     newArrival: true,
     inStock: true,
     accent: "navy",
+    image: "/products/4-channel-cctv-dvr-kit.png",
   },
   {
     id: "p-samsung-43-tv",
@@ -529,6 +554,7 @@ export const catalogProducts: CatalogProduct[] = [
     newArrival: true,
     inStock: true,
     accent: "slate",
+    image: "/products/samsung-43-inch-smart-tv.png",
   },
   {
     id: "p-conference-mic",
@@ -549,6 +575,7 @@ export const catalogProducts: CatalogProduct[] = [
     newArrival: false,
     inStock: true,
     accent: "teal",
+    image: "/products/conference-speakerphone.png",
   },
   {
     id: "p-dynamic-mic",
@@ -569,6 +596,7 @@ export const catalogProducts: CatalogProduct[] = [
     newArrival: false,
     inStock: true,
     accent: "stone",
+    image: "/products/dynamic-vocal-microphone.png",
   },
   {
     id: "p-robotics-kit",
@@ -589,5 +617,6 @@ export const catalogProducts: CatalogProduct[] = [
     newArrival: true,
     inStock: true,
     accent: "navy",
+    image: "/products/educational-robotics-kit.png",
   },
 ];

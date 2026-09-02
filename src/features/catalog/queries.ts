@@ -185,8 +185,133 @@ export function queryCatalog(
   });
 }
 
+export function pickDiverseCatalog(products: CatalogProduct[], limit: number) {
+  const picked: CatalogProduct[] = [];
+  const usedIds = new Set<string>();
+  const usedTypes = new Set<string>();
+
+  for (const product of products) {
+    if (picked.length >= limit) {
+      break;
+    }
+    if (usedTypes.has(product.productType)) {
+      continue;
+    }
+    picked.push(product);
+    usedIds.add(product.id);
+    usedTypes.add(product.productType);
+  }
+
+  for (const product of products) {
+    if (picked.length >= limit) {
+      break;
+    }
+    if (usedIds.has(product.id)) {
+      continue;
+    }
+    picked.push(product);
+    usedIds.add(product.id);
+  }
+
+  return picked;
+}
+
+const TYPE_GALLERY: Partial<Record<CatalogProduct["productType"], string[]>> = {
+  LAPTOP: [
+    "/products/gallery/laptop-2.png",
+    "/products/gallery/laptop-3.png",
+    "/products/gallery/laptop-4.png",
+  ],
+  DESKTOP: ["/products/gallery/desktop-2.png", "/products/gallery/desktop-3.png"],
+  CUSTOM_PC: ["/products/gallery/custom-pc-2.png", "/products/gallery/custom-pc-3.png"],
+  PRINTER: ["/products/gallery/printer-2.png", "/products/gallery/printer-3.png"],
+  MONITOR: ["/products/gallery/monitor-2.png", "/products/gallery/monitor-3.png"],
+  UPS: ["/products/gallery/ups-2.png", "/products/gallery/ups-3.png"],
+  NETWORKING: ["/products/gallery/router-2.png", "/products/gallery/router-3.png"],
+  CCTV: ["/products/gallery/cctv-2.png", "/products/gallery/cctv-3.png"],
+  APPLIANCE: ["/products/gallery/tv-2.png", "/products/gallery/tv-3.png"],
+  ROBOTICS: ["/products/gallery/robot-2.png", "/products/gallery/robot-3.png"],
+};
+
+function extrasFor(product: CatalogProduct) {
+  if (product.productType === "AUDIO") {
+    return product.slug.includes("mic")
+      ? ["/products/gallery/mic-2.png"]
+      : ["/products/gallery/audio-2.png"];
+  }
+  if (product.productType === "ACCESSORY") {
+    if (product.slug.includes("keys") || product.slug.includes("keyboard")) {
+      return ["/products/gallery/keyboard-2.png", "/products/gallery/keyboard-3.png"];
+    }
+    if (product.slug.includes("mouse")) {
+      return ["/products/gallery/mouse-2.png"];
+    }
+    if (product.slug.includes("hdmi") || product.slug.includes("cable")) {
+      return ["/products/gallery/cable-2.png"];
+    }
+    if (product.slug.includes("ram")) {
+      return ["/products/gallery/ram-2.png"];
+    }
+    if (product.slug.includes("ssd")) {
+      return ["/products/gallery/ssd-2.png"];
+    }
+  }
+  return TYPE_GALLERY[product.productType] ?? [];
+}
+
+export function productGallery(product: CatalogProduct) {
+  const unique = new Set<string>();
+  if (product.image) {
+    unique.add(product.image);
+  }
+  for (const src of product.images ?? []) {
+    unique.add(src);
+  }
+  if (!product.images?.length) {
+    for (const src of extrasFor(product)) {
+      unique.add(src);
+    }
+  }
+  return [...unique];
+}
+
 export function getProductBySlug(slug: string, products: CatalogProduct[] = catalogProducts) {
   return products.find((product) => product.slug === slug) ?? null;
+}
+
+export function relatedProducts(
+  product: CatalogProduct,
+  products: CatalogProduct[] = catalogProducts,
+  limit = 4,
+) {
+  return products
+    .filter((item) => item.id !== product.id && item.slug !== product.slug)
+    .map((item) => {
+      let score = 0;
+      if (item.categorySlug === product.categorySlug) {
+        score += 8;
+      }
+      if (item.productType === product.productType) {
+        score += 5;
+      }
+      if (item.brand.toLowerCase() === product.brand.toLowerCase()) {
+        score += 3;
+      }
+      if (item.condition === product.condition) {
+        score += 2;
+      }
+      const gap = Math.abs(item.salePrice - product.salePrice) / Math.max(product.salePrice, 1);
+      if (gap <= 0.35) {
+        score += 1;
+      }
+      if (item.featured || item.bestseller) {
+        score += 1;
+      }
+      return { item, score };
+    })
+    .sort((left, right) => right.score - left.score)
+    .slice(0, limit)
+    .map((row) => row.item);
 }
 
 export function searchSuggestions(q: string, limit = 6, products: CatalogProduct[] = catalogProducts) {

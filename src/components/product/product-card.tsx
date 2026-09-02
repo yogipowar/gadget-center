@@ -33,11 +33,19 @@ export function ProductCard({ product }: ProductCardProps) {
     toast.success("Added to cart");
   }
 
+  const meta = [
+    product.condition === "REFURBISHED" ? conditionLabel(product) : null,
+    product.warranty,
+    product.inStock ? "In stock" : "Out of stock",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
     <article className="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card">
       <Link href={routes.product(product.slug)} className="relative block">
-        <ProductMedia accent={product.accent} name={product.name} />
-        <div className="absolute top-2 left-2 flex flex-wrap gap-1">
+        <ProductMedia compact accent={product.accent} name={product.name} image={product.image} />
+        <div className="absolute top-1.5 left-1.5">
           <Badge
             className={
               product.condition === "REFURBISHED"
@@ -50,45 +58,43 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
       </Link>
 
-      <div className="flex flex-1 flex-col gap-3 p-3 sm:p-4">
+      <div className="flex flex-1 flex-col gap-2 p-2.5 sm:p-3">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
             {product.brand}
           </p>
-          <Link href={routes.product(product.slug)} className="mt-1 block">
-            <h3 className="text-sm font-semibold leading-snug text-foreground hover:underline">
+          <Link href={routes.product(product.slug)} className="mt-0.5 block">
+            <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground hover:underline">
               {product.name}
             </h3>
           </Link>
-          <p className="mt-1 text-xs text-muted-foreground">{conditionLabel(product)}</p>
-          <p className="mt-2 text-xs leading-5 text-muted-foreground">{product.specs.join(" | ")}</p>
-        </div>
-
-        <div className="mt-auto">
-          <div className="flex flex-wrap items-baseline gap-2">
-            <p className="text-base font-semibold">{formatInr(product.salePrice, { compact: true })}</p>
-            {discount > 0 ? (
-              <>
-                <p className="text-xs text-muted-foreground line-through">
-                  {formatInr(product.price, { compact: true })}
-                </p>
-                <p className="text-xs font-medium text-emerald-700">{discount}% off</p>
-              </>
-            ) : null}
-          </div>
-          <p className="mt-1 text-xs text-muted-foreground">Warranty: {product.warranty}</p>
-          <p className="mt-1 text-xs font-medium">
-            {product.inStock ? "In stock" : "Out of stock"}
+          <p className="mt-1 line-clamp-1 text-[11px] leading-4 text-muted-foreground">
+            {product.specs.join(" · ")}
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-2">
-          <Button size="sm" disabled={!product.inStock} onClick={handleAdd}>
+        <div className="mt-auto">
+          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+            <p className="text-sm font-semibold">{formatInr(product.salePrice, { compact: true })}</p>
+            {discount > 0 ? (
+              <>
+                <p className="text-[11px] text-muted-foreground line-through">
+                  {formatInr(product.price, { compact: true })}
+                </p>
+                <p className="text-[11px] font-medium text-emerald-700">{discount}% off</p>
+              </>
+            ) : null}
+          </div>
+          <p className="mt-0.5 line-clamp-1 text-[11px] text-muted-foreground">{meta}</p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-1.5">
+          <Button size="xs" disabled={!product.inStock} onClick={handleAdd}>
             Add to Cart
           </Button>
           <Link
             href={routes.product(product.slug)}
-            className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+            className={cn(buttonVariants({ variant: "outline", size: "xs" }))}
           >
             Buy Now
           </Link>
@@ -98,14 +104,14 @@ export function ProductCard({ product }: ProductCardProps) {
             href={whatsapp}
             target="_blank"
             rel="noopener noreferrer"
-            className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "w-full")}
+            className={cn(buttonVariants({ variant: "link", size: "xs" }), "h-auto px-0")}
           >
             Enquire
           </a>
         ) : (
           <Link
             href={`${routes.contact}?product=${product.slug}`}
-            className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "w-full")}
+            className={cn(buttonVariants({ variant: "link", size: "xs" }), "h-auto px-0")}
           >
             Enquire
           </Link>

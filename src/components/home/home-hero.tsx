@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 
 import { useLeadCapture } from "@/components/lead/lead-capture-provider";
@@ -13,7 +14,7 @@ export function HomeHero() {
 
   return (
     <section className="bg-foreground text-background">
-      <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-12 lg:grid-cols-[1.2fr_0.8fr] lg:items-center lg:py-16">
+      <div className="mx-auto grid w-full max-w-6xl items-center gap-10 px-4 py-12 lg:grid-cols-[1.05fr_0.95fr] lg:py-16">
         <div>
           <p className="text-sm font-medium text-background/70">
             Laptops · Desktops · Printers · UPS · CCTV
@@ -55,14 +56,20 @@ export function HomeHero() {
             </button>
           </div>
         </div>
-        <div className="rounded-2xl border border-background/15 bg-background/5 p-6">
-          <p className="text-sm font-medium">What we help you buy</p>
-          <ul className="mt-4 space-y-3 text-sm text-background/75">
-            <li>New laptops with current-generation processors</li>
-            <li>Refurbished business laptops with visible grades</li>
-            <li>Desktops, custom PCs, printers, UPS and accessories</li>
-            <li>CCTV, networking, appliances, audio and robotics</li>
-          </ul>
+        <div className="hero-stage relative mx-auto w-full max-w-lg lg:max-w-none">
+          <div className="pointer-events-none absolute inset-[10%] rounded-full bg-background/12 blur-3xl" />
+          <div className="hero-float relative z-10">
+            <Image
+              src="/hero-laptop-3d.png"
+              alt="Laptop for sale at GadgetCenter"
+              width={720}
+              height={720}
+              preload
+              sizes="(max-width: 1024px) 90vw, 480px"
+              className="relative h-auto w-full"
+            />
+          </div>
+          <div className="hero-ground-shadow pointer-events-none absolute bottom-[8%] left-1/2 z-0 h-12 w-[55%] -translate-x-1/2 rounded-[100%] bg-black/80 blur-2xl" />
         </div>
       </div>
     </section>

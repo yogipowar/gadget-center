@@ -84,12 +84,30 @@ function parseState(raw: string | null): AdminCatalogState | null {
   }
 }
 
+function applySeedImages(state: AdminCatalogState): AdminCatalogState {
+  const seedImages = new Map(catalogProducts.map((product) => [product.id, product.image]));
+  let changed = false;
+  const products = state.products.map((product) => {
+    const image = product.image ?? seedImages.get(product.id);
+    if (image && image !== product.image) {
+      changed = true;
+      return { ...product, image };
+    }
+    return product;
+  });
+  return changed ? { ...state, products } : state;
+}
+
 function hydrate() {
   if (hydrated || typeof window === "undefined") {
     return;
   }
   hydrated = true;
-  memory = parseState(window.localStorage.getItem(LOCAL_STORAGE_KEYS.adminCatalog)) ?? seedState();
+  const loaded = parseState(window.localStorage.getItem(LOCAL_STORAGE_KEYS.adminCatalog)) ?? seedState();
+  memory = applySeedImages(loaded);
+  if (memory !== loaded) {
+    window.localStorage.setItem(LOCAL_STORAGE_KEYS.adminCatalog, JSON.stringify(memory));
+  }
 }
 
 function persist(next: AdminCatalogState) {
