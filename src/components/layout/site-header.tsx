@@ -17,7 +17,8 @@ import {
 import { routes } from "@/config/routes";
 import { siteConfig } from "@/config/site";
 import { cartCount, useCart } from "@/features/cart/store";
-import { searchSuggestions, shopCategories } from "@/features/catalog/queries";
+import { searchSuggestions } from "@/features/catalog/queries";
+import { useAdminCatalog } from "@/features/admin/catalog-store";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -37,8 +38,13 @@ export function SiteHeader() {
   const { openLeadCapture } = useLeadCapture();
   const [query, setQuery] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
+  const catalog = useAdminCatalog();
   const count = cartCount(cart);
-  const suggestions = useMemo(() => searchSuggestions(query), [query]);
+  const suggestions = useMemo(
+    () => searchSuggestions(query, 6, catalog.products),
+    [catalog.products, query],
+  );
+  const liveCategories = catalog.categories.filter((category) => category.live);
 
   function onSearch(event: FormEvent) {
     event.preventDefault();
@@ -159,14 +165,14 @@ export function SiteHeader() {
             <Link href={routes.products} className="rounded-md px-2 py-2 text-sm hover:bg-muted" onClick={() => setMenuOpen(false)}>
               All products
             </Link>
-            {shopCategories.map((item) => (
+            {liveCategories.map((item) => (
               <Link
                 key={item.slug}
-                href={item.href}
+                href={`/products/${item.slug}`}
                 className="rounded-md px-2 py-2 text-sm hover:bg-muted"
                 onClick={() => setMenuOpen(false)}
               >
-                {item.title}
+                {item.name}
               </Link>
             ))}
             <Link href={routes.services} className="rounded-md px-2 py-2 text-sm hover:bg-muted" onClick={() => setMenuOpen(false)}>

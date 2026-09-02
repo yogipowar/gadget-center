@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 
 import { ProductListing } from "@/components/product/product-listing";
 import { shopCategories } from "@/features/catalog/queries";
@@ -75,7 +74,7 @@ export async function generateStaticParams() {
   return shopCategories.map((item) => ({ category: item.slug }));
 }
 
-export const dynamicParams = false;
+export const dynamicParams = true;
 
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
   const { category } = await params;
@@ -89,19 +88,11 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { category } = await params;
   const meta = categoryMeta[category];
-  if (!meta) {
-    notFound();
-  }
-
-  const known = shopCategories.some((item) => item.slug === category);
-  if (!known) {
-    notFound();
-  }
 
   return (
     <ProductListing
-      title={meta.title}
-      description={meta.description}
+      title={meta?.title ?? category.replace(/-/g, " ")}
+      description={meta?.description ?? "Products in this category, including items added from the admin panel."}
       filters={{ categorySlug: category }}
     />
   );

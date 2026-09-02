@@ -124,8 +124,11 @@ export function conditionLabel(product: CatalogProduct) {
   return "New";
 }
 
-export function queryCatalog(filters: CatalogQuery = {}): CatalogProduct[] {
-  return catalogProducts.filter((product) => {
+export function queryCatalog(
+  filters: CatalogQuery = {},
+  products: CatalogProduct[] = catalogProducts,
+): CatalogProduct[] {
+  return products.filter((product) => {
     if (filters.categorySlug && product.categorySlug !== filters.categorySlug) {
       return false;
     }
@@ -182,16 +185,16 @@ export function queryCatalog(filters: CatalogQuery = {}): CatalogProduct[] {
   });
 }
 
-export function getProductBySlug(slug: string) {
-  return catalogProducts.find((product) => product.slug === slug) ?? null;
+export function getProductBySlug(slug: string, products: CatalogProduct[] = catalogProducts) {
+  return products.find((product) => product.slug === slug) ?? null;
 }
 
-export function searchSuggestions(q: string, limit = 6) {
+export function searchSuggestions(q: string, limit = 6, products: CatalogProduct[] = catalogProducts) {
   const query = q.trim().toLowerCase();
   if (query.length < 2) {
     return [];
   }
-  return catalogProducts
+  return products
     .filter((product) =>
       [product.name, product.brand, product.sku].join(" ").toLowerCase().includes(query),
     )

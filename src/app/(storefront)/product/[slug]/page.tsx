@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 
-import { ProductBuyBox } from "@/components/product/product-buy-box";
-import { ProductMedia } from "@/components/product/product-media";
-import { Badge } from "@/components/ui/badge";
-import { catalogProducts, getProductBySlug, conditionLabel } from "@/features/catalog/queries";
-import { formatInr, discountPercent } from "@/utils/currency";
+import { ProductDetailClient } from "@/app/(storefront)/product/[slug]/product-detail-client";
+import { catalogProducts, getProductBySlug } from "@/features/catalog/queries";
 
 type ProductPageProps = {
   params: Promise<{ slug: string }>;
@@ -15,7 +11,7 @@ export function generateStaticParams() {
   return catalogProducts.map((product) => ({ slug: product.slug }));
 }
 
-export const dynamicParams = false;
+export const dynamicParams = true;
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
@@ -31,70 +27,5 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
-  if (!product) {
-    notFound();
-  }
-
-  const discount = discountPercent(product.price, product.salePrice);
-
-  return (
-    <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-8 lg:grid-cols-2">
-      <div className="overflow-hidden rounded-xl border border-border">
-        <ProductMedia accent={product.accent} name={product.name} className="aspect-[4/3] min-h-64" />
-      </div>
-      <div>
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          {product.brand} · {product.sku}
-        </p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight">{product.name}</h1>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Badge
-            className={
-              product.condition === "REFURBISHED" ? "bg-amber-600 text-white" : "bg-emerald-700 text-white"
-            }
-          >
-            {product.condition === "REFURBISHED" ? "REFURBISHED" : "NEW"}
-          </Badge>
-          <Badge variant="outline">{conditionLabel(product)}</Badge>
-        </div>
-        <p className="mt-4 text-sm leading-6 text-muted-foreground">{product.shortDescription}</p>
-        <div className="mt-6 flex flex-wrap items-baseline gap-3">
-          <p className="text-3xl font-semibold">{formatInr(product.salePrice, { compact: true })}</p>
-          {discount > 0 ? (
-            <>
-              <p className="text-sm text-muted-foreground line-through">
-                {formatInr(product.price, { compact: true })}
-              </p>
-              <p className="text-sm font-medium text-emerald-700">{discount}% off</p>
-            </>
-          ) : null}
-        </div>
-        <p className="mt-2 text-sm text-muted-foreground">Warranty: {product.warranty}</p>
-        <p className="mt-1 text-sm font-medium">{product.inStock ? "In stock" : "Out of stock"}</p>
-        <p className="mt-4 text-sm text-muted-foreground">EMI options will be shown after payment is enabled.</p>
-        <div className="mt-6">
-          <ProductBuyBox product={product} />
-        </div>
-        <div className="mt-8">
-          <h2 className="text-sm font-semibold">Specifications</h2>
-          <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
-            {product.specs.map((spec) => (
-              <li key={spec}>{spec}</li>
-            ))}
-          </ul>
-        </div>
-        {product.condition === "REFURBISHED" ? (
-          <div className="mt-8 rounded-xl border border-border p-4">
-            <h2 className="text-sm font-semibold">Refurbishment & condition details</h2>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              {conditionLabel(product)}. Warranty on this listing is {product.warranty}. Cosmetic
-              notes and a full test checklist will appear from inventory records once those fields
-              are stored for this serial.
-            </p>
-          </div>
-        ) : null}
-      </div>
-    </div>
-  );
+  return <ProductDetailClient slug={slug} />;
 }
