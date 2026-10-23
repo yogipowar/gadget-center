@@ -1,18 +1,13 @@
 const faqs = [
   {
-    question: "Do you sell both new and refurbished laptops?",
+    question: "Are these laptops new or refurbished?",
     answer:
-      "Yes. New laptops carry brand warranty as listed on each product. Refurbished laptops show condition grade and the warranty stored for that device.",
+      "The current catalog is refurbished Dell and HP business laptops. Each listing is labelled refurbished. We do not mark a device as new unless the catalog says so.",
   },
   {
-    question: "Do you only sell laptops?",
+    question: "What is included with the laptop?",
     answer:
-      "Laptops and computers are the core range. We also supply printers, UPS, monitors, storage, networking, CCTV, home appliances, pro audio, robotics kits, and service/repair.",
-  },
-  {
-    question: "What does refurbished grade mean?",
-    answer:
-      "Grade A+ and A are lightly used with strong cosmetics. Grade B may show visible wear. We only list devices that have been tested. The grade on the product page is the grade of that listing.",
+      "Adapter is included. RAM and SSD are as listed on each product. Unless a listing says otherwise, the default is 8GB RAM and 256GB M.2 NVMe SSD.",
   },
   {
     question: "Is warranty included?",
@@ -22,7 +17,7 @@ const faqs = [
   {
     question: "Can I get help before buying?",
     answer:
-      "Yes. Use Get Expert Help, WhatsApp, or the contact page. Share your budget, preferred brand and whether you need a new or refurbished device.",
+      "Yes. Use Get Expert Help, WhatsApp, or the contact page. Share your budget, preferred brand and the model you want.",
   },
   {
     question: "Do you deliver?",
@@ -34,8 +29,10 @@ const faqs = [
 export function HomeFaq() {
   return (
     <section className="mx-auto w-full max-w-6xl px-4">
-      <h2 className="text-2xl font-semibold tracking-tight">Frequently asked questions</h2>
-      <div className="mt-6 divide-y divide-border rounded-xl border border-border">
+      <h2 className="border-b border-border pb-2 text-lg font-semibold text-brand-navy">
+        Frequently asked questions
+      </h2>
+      <div className="mt-2 divide-y divide-border">
         {faqs.map((item) => (
           <details key={item.question} className="group px-4 py-3">
             <summary className="cursor-pointer list-none text-sm font-medium">

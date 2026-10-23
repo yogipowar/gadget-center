@@ -22,7 +22,7 @@ import type {
 import { catalogProducts } from "@/features/catalog/products";
 import type { CatalogProduct } from "@/features/catalog/types";
 
-const STORE_VERSION = 1;
+const STORE_VERSION = 6;
 
 export type AdminCatalogState = {
   version: number;
@@ -203,6 +203,16 @@ export function deleteProduct(id: string) {
     ...memory,
     products: memory.products.filter((item) => item.id !== id),
     inventory: memory.inventory.filter((item) => item.id !== id),
+  });
+}
+
+export function deleteProducts(ids: string[]) {
+  hydrate();
+  const remove = new Set(ids);
+  persist({
+    ...memory,
+    products: memory.products.filter((item) => !remove.has(item.id)),
+    inventory: memory.inventory.filter((item) => !remove.has(item.id)),
   });
 }
 

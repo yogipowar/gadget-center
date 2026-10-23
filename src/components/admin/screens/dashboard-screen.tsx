@@ -7,34 +7,34 @@ import { StatusBadge } from "@/components/admin/status-badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { routes } from "@/config/routes";
-import { adminCustomers, adminLeads, adminOrders } from "@/features/admin/fixtures";
-import { LEAD_STATUS_LABELS, ORDER_STATUS_LABELS, formatAdminDate } from "@/features/admin/labels";
-import { catalogProducts } from "@/features/catalog/products";
+import { useAdminCatalog } from "@/features/admin/catalog-store";
+import { adminOrders } from "@/features/admin/fixtures";
+import { ORDER_STATUS_LABELS, formatAdminDate } from "@/features/admin/labels";
 import { formatInr } from "@/utils/currency";
 import { cn } from "@/lib/utils";
 
-const openLeads = adminLeads.filter((lead) => !["CONVERTED", "LOST", "NOT_INTERESTED"].includes(lead.status));
-const hotLeads = adminLeads.filter((lead) => lead.priority === "HOT" && lead.status !== "LOST");
-const monthOrders = adminOrders.filter((order) => order.status !== "CANCELLED");
-const monthSales = monthOrders.reduce((sum, order) => sum + order.total, 0);
-const lowStock = catalogProducts.filter((product) => !product.inStock).length;
-
-const stats = [
-  { label: "Open leads", value: String(openLeads.length), href: routes.admin.leads },
-  { label: "Hot follow-ups", value: String(hotLeads.length), href: routes.admin.leads },
-  { label: "Orders (sample)", value: String(monthOrders.length), href: routes.admin.orders },
-  { label: "Order value", value: formatInr(monthSales, { compact: true }), href: routes.admin.reports },
-  { label: "Customers", value: String(adminCustomers.length), href: routes.admin.customers },
-  { label: "Out of stock SKUs", value: String(lowStock), href: routes.admin.inventory },
-];
-
 export function DashboardScreen() {
+  const catalog = useAdminCatalog();
+  const products = catalog.products;
+  const units = products.reduce((sum, product) => sum + (product.onHand ?? 0), 0);
+  const outOfStock = products.filter((product) => !product.inStock || (product.onHand ?? 0) <= 0);
+  const lowStock = products.filter((product) => {
+    const onHand = product.onHand ?? 0;
+    return product.inStock && onHand > 0 && onHand <= 5;
+  });
+  const liveOrders = adminOrders.filter((order) => order.status !== "CANCELLED");
+  const orderValue = liveOrders.reduce((sum, order) => sum + order.total, 0);
+  const stats = [
+    { label: "Products", value: String(products.length), href: routes.admin.products },
+    { label: "Units on hand", value: String(units), href: routes.admin.products },
+    { label: "Out of stock", value: String(outOfStock.length), href: routes.admin.products },
+    { label: "Orders", value: String(liveOrders.length), href: routes.admin.orders },
+    { label: "Order value", value: formatInr(orderValue, { compact: true }), href: routes.admin.orders },
+  ];
+
   return (
-    <AdminPage
-      title="Dashboard"
-      description="Today’s pipeline from Meta ads, WhatsApp and walk-ins. Figures are sample data."
-    >
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+    <AdminPage title="Dashboard" description="Catalog and orders for this shop. Extra admin tools stay off until they are needed.">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         {stats.map((stat) => (
           <Link key={stat.label} href={stat.href} className="rounded-xl">
             <Card className="h-full transition-colors hover:bg-muted/40">
@@ -50,25 +50,27 @@ export function DashboardScreen() {
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader className="border-b">
-            <CardTitle>Latest leads</CardTitle>
-            <CardDescription>Newest enquiries waiting on the sales desk.</CardDescription>
+            <CardTitle>Low stock</CardTitle>
+            <CardDescription>Listings with 5 or fewer units left.</CardDescription>
           </CardHeader>
           <CardContent className="pt-4">
-            <ul className="space-y-3">
-              {adminLeads.slice(0, 5).map((lead) => (
-                <li key={lead.id} className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-medium">{lead.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {lead.leadNumber} · {lead.city} · {formatAdminDate(lead.createdAt)}
-                    </p>
-                  </div>
-                  <StatusBadge value={lead.status} label={LEAD_STATUS_LABELS[lead.status]} />
-                </li>
-              ))}
-            </ul>
-            <Link href={routes.admin.leads} className={cn(buttonVariants({ variant: "outline" }), "mt-4")}>
-              Open leads
+            {lowStock.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No low-stock products right now.</p>
+            ) : (
+              <ul className="space-y-3">
+                {lowStock.slice(0, 6).map((product) => (
+                  <li key={product.id} className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-medium">{product.name}</p>
+                      <p className="text-xs text-muted-foreground">{product.sku}</p>
+                    </div>
+                    <p className="text-sm font-medium">{product.onHand ?? 0}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <Link href={routes.admin.products} className={cn(buttonVariants({ variant: "outline" }), "mt-4")}>
+              Open products
             </Link>
           </CardContent>
         </Card>
@@ -80,12 +82,12 @@ export function DashboardScreen() {
           </CardHeader>
           <CardContent className="pt-4">
             <ul className="space-y-3">
-              {adminOrders.slice(0, 5).map((order) => (
+              {adminOrders.slice(0, 6).map((order) => (
                 <li key={order.id} className="flex items-start justify-between gap-3">
                   <div>
                     <p className="font-medium">{order.orderNumber}</p>
                     <p className="text-xs text-muted-foreground">
-                      {order.customer} · {formatInr(order.total, { compact: true })}
+                      {order.customer} · {formatInr(order.total, { compact: true })} · {formatAdminDate(order.createdAt)}
                     </p>
                   </div>
                   <StatusBadge value={order.status} label={ORDER_STATUS_LABELS[order.status]} />

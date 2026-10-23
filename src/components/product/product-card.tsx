@@ -1,122 +1,95 @@
-"use client";
-
 import Link from "next/link";
-import { toast } from "sonner";
 
-import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
 import { ProductMedia } from "@/components/product/product-media";
 import { routes } from "@/config/routes";
-import { addToCart } from "@/features/cart/store";
-import { conditionLabel } from "@/features/catalog/queries";
+import { productFacts } from "@/features/catalog/queries";
 import type { CatalogProduct } from "@/features/catalog/types";
-import { buildWhatsAppUrl, productEnquiryMessage } from "@/lib/whatsapp";
-import { cn } from "@/lib/utils";
 import { discountPercent, formatInr } from "@/utils/currency";
+import { cn } from "@/lib/utils";
 
 type ProductCardProps = {
   product: CatalogProduct;
 };
 
+function shortProcessor(value: string) {
+  const ultra = value.match(/ultra\s*(\d)/i);
+  if (ultra) {
+    return `Ultra ${ultra[1]}`;
+  }
+  const core = value.match(/i[3579]/i);
+  const gen = value.match(/(\d+)(?:th|st|nd|rd)\s*gen/i);
+  if (core && gen) {
+    return `${core[0]} ${gen[1]}th`;
+  }
+  if (core) {
+    return core[0];
+  }
+  return value.replace(/intel\s+/i, "").split(",")[0]?.trim() ?? value;
+}
+
 export function ProductCard({ product }: ProductCardProps) {
   const discount = discountPercent(product.price, product.salePrice);
-  const whatsapp = buildWhatsAppUrl(
-    productEnquiryMessage({
-      name: product.name,
-      condition: product.condition === "REFURBISHED" ? "Refurbished" : "New",
-      grade: product.grade === "A_PLUS" ? "Grade A+" : product.grade ? `Grade ${product.grade}` : undefined,
-    }),
-  );
-
-  function handleAdd() {
-    addToCart(product.slug);
-    toast.success("Added to cart");
-  }
-
-  const meta = [
-    product.condition === "REFURBISHED" ? conditionLabel(product) : null,
-    product.warranty,
-    product.inStock ? "In stock" : "Out of stock",
-  ]
+  const facts = productFacts(product);
+  const isRefurbished = product.condition === "REFURBISHED";
+  const specLine = [shortProcessor(facts.processor), facts.ram, facts.storageCapacity]
     .filter(Boolean)
     .join(" · ");
 
   return (
-    <article className="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-card">
-      <Link href={routes.product(product.slug)} className="relative block">
-        <ProductMedia compact accent={product.accent} name={product.name} image={product.image} />
-        <div className="absolute top-1.5 left-1.5">
-          <Badge
-            className={
-              product.condition === "REFURBISHED"
-                ? "bg-amber-600 text-white"
-                : "bg-emerald-700 text-white"
-            }
+    <article className="h-full">
+      <Link
+        href={routes.product(product.slug)}
+        className="group flex h-full flex-col rounded-2xl bg-white p-2 transition-colors duration-200 hover:bg-zinc-50/80"
+      >
+        <div className="relative overflow-hidden rounded-xl bg-zinc-50">
+          <ProductMedia
+            compact
+            accent={product.accent}
+            name={product.name}
+            image={product.image}
+            className="transition-transform duration-300 group-hover:scale-[1.06]"
+          />
+          <span
+            className={cn(
+              "absolute top-2 left-2 inline-flex h-5 items-center rounded-md px-1.5 text-[10px] font-semibold tracking-wide text-white",
+              isRefurbished ? "bg-brand-green" : "bg-brand-blue",
+            )}
           >
-            {product.condition === "REFURBISHED" ? "REFURBISHED" : "NEW"}
-          </Badge>
+            {isRefurbished ? "Refurbished" : "New"}
+          </span>
+          {discount > 0 ? (
+            <span className="absolute top-2 right-2 inline-flex h-5 items-center rounded-md bg-brand-blue px-1.5 text-[10px] font-semibold text-white">
+              {discount}% off
+            </span>
+          ) : null}
         </div>
-      </Link>
 
-      <div className="flex flex-1 flex-col gap-2 p-2.5 sm:p-3">
-        <div>
-          <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+        <div className="flex flex-1 flex-col px-1 pt-2.5 pb-1">
+          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-400">
             {product.brand}
           </p>
-          <Link href={routes.product(product.slug)} className="mt-0.5 block">
-            <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground hover:underline">
-              {product.name}
-            </h3>
-          </Link>
-          <p className="mt-1 line-clamp-1 text-[11px] leading-4 text-muted-foreground">
-            {product.specs.join(" · ")}
-          </p>
-        </div>
+          <h3 className="mt-0.5 line-clamp-2 text-sm leading-5 font-medium text-zinc-900 group-hover:text-brand-blue">
+            {product.name}
+          </h3>
+          {specLine ? (
+            <p className="mt-1 truncate text-[11px] text-zinc-500">{specLine}</p>
+          ) : null}
 
-        <div className="mt-auto">
-          <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-            <p className="text-sm font-semibold">{formatInr(product.salePrice, { compact: true })}</p>
-            {discount > 0 ? (
-              <>
-                <p className="text-[11px] text-muted-foreground line-through">
+          <div className="mt-auto pt-2">
+            <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+              <p className="text-[15px] font-semibold tracking-tight text-zinc-950">
+                {formatInr(product.salePrice, { compact: true })}
+              </p>
+              {discount > 0 ? (
+                <p className="text-xs text-zinc-400 line-through">
                   {formatInr(product.price, { compact: true })}
                 </p>
-                <p className="text-[11px] font-medium text-emerald-700">{discount}% off</p>
-              </>
-            ) : null}
+              ) : null}
+            </div>
+            <p className="mt-0.5 text-[11px] text-zinc-500">Free shipping</p>
           </div>
-          <p className="mt-0.5 line-clamp-1 text-[11px] text-muted-foreground">{meta}</p>
         </div>
-
-        <div className="grid grid-cols-2 gap-1.5">
-          <Button size="xs" disabled={!product.inStock} onClick={handleAdd}>
-            Add to Cart
-          </Button>
-          <Link
-            href={routes.product(product.slug)}
-            className={cn(buttonVariants({ variant: "outline", size: "xs" }))}
-          >
-            Buy Now
-          </Link>
-        </div>
-        {whatsapp ? (
-          <a
-            href={whatsapp}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={cn(buttonVariants({ variant: "link", size: "xs" }), "h-auto px-0")}
-          >
-            Enquire
-          </a>
-        ) : (
-          <Link
-            href={`${routes.contact}?product=${product.slug}`}
-            className={cn(buttonVariants({ variant: "link", size: "xs" }), "h-auto px-0")}
-          >
-            Enquire
-          </Link>
-        )}
-      </div>
+      </Link>
     </article>
   );
 }

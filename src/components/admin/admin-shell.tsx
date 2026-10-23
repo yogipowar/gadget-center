@@ -2,17 +2,21 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { LogOut, Menu, Store } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { routes } from "@/config/routes";
 import { siteConfig } from "@/config/site";
-import { logoutStaff, readStaffSession } from "@/features/admin/auth";
+import {
+  getServerStaffSession,
+  logoutStaff,
+  readStaffSession,
+  subscribeStaffSession,
+} from "@/features/admin/auth";
 import { STAFF_ROLE_LABELS } from "@/features/admin/labels";
 import { adminNav } from "@/features/admin/nav";
-import type { StaffSession } from "@/features/admin/types";
 import { cn } from "@/lib/utils";
 
 function normalizePath(pathname: string) {
@@ -77,25 +81,21 @@ function NavLinks({
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [session, setSession] = useState<StaffSession | null>(null);
-  const [ready, setReady] = useState(false);
+  const session = useSyncExternalStore(
+    subscribeStaffSession,
+    readStaffSession,
+    getServerStaffSession,
+  );
   const [menuOpen, setMenuOpen] = useState(false);
   const current = normalizePath(pathname);
   const isLogin = current === routes.admin.login;
 
   useEffect(() => {
-    setSession(readStaffSession());
-    setReady(true);
-  }, [pathname]);
-
-  useEffect(() => {
-    if (!ready || isLogin) {
+    if (isLogin || session) {
       return;
     }
-    if (!session) {
-      router.replace(routes.admin.login);
-    }
-  }, [isLogin, ready, router, session]);
+    router.replace(routes.admin.login);
+  }, [isLogin, router, session]);
 
   const pageTitle = useMemo(() => {
     for (const group of adminNav) {
@@ -109,7 +109,6 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
   function onLogout() {
     logoutStaff();
-    setSession(null);
     router.replace(routes.admin.login);
   }
 
@@ -117,7 +116,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
-  if (!ready || !session) {
+  if (!session) {
     return (
       <div className="flex min-h-full flex-1 items-center justify-center bg-muted/30 text-sm text-muted-foreground">
         Loading staff console…
@@ -173,7 +172,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         </header>
         <div className="flex-1 px-4 py-6 lg:px-8">
           <div className="mb-4 rounded-lg border border-border bg-card px-3 py-2 text-xs text-muted-foreground">
-            Demo console. Catalog changes are saved in this browser until a database is connected.
+            Catalog edits stay in this browser until a database is connected.
           </div>
           {children}
         </div>

@@ -9,13 +9,13 @@ export const computerCategories = [
   {
     title: "New Laptops",
     href: routes.laptops,
-    description: "Dell, HP, Lenovo, ASUS and more",
+    description: "New laptops when stock is listed",
     slug: "laptops",
   },
   {
     title: "Refurbished Laptops",
     href: routes.refurbishedLaptops,
-    description: "Tested devices, graded condition",
+    description: "Dell and HP business laptops, adapter included",
     slug: "refurbished-laptops",
   },
   {
@@ -103,7 +103,7 @@ export const additionalCategories = [
 
 export const shopCategories = [...computerCategories, ...additionalCategories];
 
-export const laptopBrands = ["Dell", "HP", "Lenovo", "ASUS", "Acer", "Apple", "MSI", "Other"] as const;
+export const laptopBrands = ["Dell", "HP"] as const;
 
 export const budgetBands = [
   { label: "Under ₹20,000", minPrice: 0, maxPrice: 19999 },
@@ -124,6 +124,45 @@ export function conditionLabel(product: CatalogProduct) {
   return "New";
 }
 
+export function productFacts(product: CatalogProduct) {
+  const ramLine = product.specs.find((item) => /RAM/i.test(item));
+  const storageLine = product.specs.find((item) => /(SSD|HDD|NVMe)/i.test(item) && !/RAM/i.test(item));
+  const screenLine = product.specs.find((item) => /inch/i.test(item));
+  const processor =
+    product.specs.find((item) => /core|ultra|ryzen|intel|amd/i.test(item) && !/RAM|SSD|inch/i.test(item)) ?? "";
+  const ram = ramLine?.replace(/\s*RAM/i, "").trim() ?? "";
+  const storageCapacity = storageLine?.match(/(\d+\s*GB)/i)?.[1]?.replace(/\s+/g, "") ?? "";
+  const storageType = storageLine
+    ? /M\.?2/i.test(storageLine)
+      ? "SSD (M.2 NVMe)"
+      : /SSD/i.test(storageLine)
+        ? "SSD"
+        : /HDD/i.test(storageLine)
+          ? "HDD"
+          : ""
+    : "";
+  const screenSize = screenLine?.replace(/touchscreen/i, "").replace(/\s+/g, " ").trim() ?? "";
+  const model = product.name
+    .replace(new RegExp(`^${product.brand}\\s+`, "i"), "")
+    .replace(/\s*\([^)]*\)\s*$/, "")
+    .trim();
+
+  return {
+    sku: product.sku,
+    brand: product.brand,
+    model,
+    processor,
+    ram,
+    storageCapacity: storageCapacity || storageLine || "",
+    storageType,
+    screenSize,
+    touchScreen: product.specs.some((item) => /touch/i.test(item)),
+    adapterIncluded: product.specs.some((item) => /adapter/i.test(item)),
+    condition: conditionLabel(product),
+    warranty: product.warranty.trim(),
+  };
+}
+
 export function queryCatalog(
   filters: CatalogQuery = {},
   products: CatalogProduct[] = catalogProducts,
@@ -132,18 +171,30 @@ export function queryCatalog(
     if (filters.categorySlug && product.categorySlug !== filters.categorySlug) {
       return false;
     }
-    if (filters.brand && filters.brand !== "Other") {
-      if (product.brand.toLowerCase() !== filters.brand.toLowerCase()) {
+    const brandFilters = filters.brands?.length
+      ? filters.brands
+      : filters.brand
+        ? [filters.brand]
+        : [];
+    if (brandFilters.length > 0) {
+      const selected = brandFilters.map((item) => item.toLowerCase());
+      const known = ["dell", "hp"];
+      const matches = selected.some((item) => {
+        if (item === "other") {
+          return !known.includes(product.brand.toLowerCase());
+        }
+        return product.brand.toLowerCase() === item;
+      });
+      if (!matches) {
         return false;
       }
     }
-    if (filters.brand === "Other") {
-      const known = ["Dell", "HP", "Lenovo", "ASUS", "Acer", "Apple", "MSI"];
-      if (known.includes(product.brand)) {
-        return false;
-      }
-    }
-    if (filters.condition && product.condition !== filters.condition) {
+    const conditionFilters = filters.conditions?.length
+      ? filters.conditions
+      : filters.condition
+        ? [filters.condition]
+        : [];
+    if (conditionFilters.length > 0 && !conditionFilters.includes(product.condition)) {
       return false;
     }
     if (filters.productType && product.productType !== filters.productType) {

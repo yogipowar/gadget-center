@@ -19,7 +19,7 @@ import {
   type ProductType,
   type RefurbishedGrade,
 } from "@/constants/products";
-import { createRecordId, deleteProduct, saveProduct, useAdminCatalog } from "@/features/admin/catalog-store";
+import { createRecordId, deleteProduct, deleteProducts, saveProduct, useAdminCatalog } from "@/features/admin/catalog-store";
 import { conditionLabel } from "@/features/catalog/queries";
 import type { CatalogProduct } from "@/features/catalog/types";
 import { formatInr } from "@/utils/currency";
@@ -52,11 +52,11 @@ const emptyForm: ProductForm = {
   brand: "",
   categorySlug: "",
   productType: "LAPTOP",
-  condition: "NEW",
+  condition: "REFURBISHED",
   grade: "",
   price: "",
   salePrice: "",
-  warranty: "1 Year brand warranty",
+  warranty: "",
   specs: "",
   shortDescription: "",
   onHand: "5",
@@ -91,14 +91,18 @@ export function ProductsScreen() {
   const catalog = useAdminCatalog();
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [form, setForm] = useState<ProductForm>(emptyForm);
 
   function openCreate() {
     setEditingId(null);
     setForm({
       ...emptyForm,
-      brand: catalog.brands[0]?.name ?? "",
-      categorySlug: catalog.categories[0]?.slug ?? "",
+      brand: catalog.brands.find((brand) => brand.live)?.name ?? catalog.brands[0]?.name ?? "",
+      categorySlug:
+        catalog.categories.find((category) => category.slug === "refurbished-laptops")?.slug ??
+        catalog.categories[0]?.slug ??
+        "",
     });
     setOpen(true);
   }
@@ -145,7 +149,7 @@ export function ProductsScreen() {
       grade: form.condition === "REFURBISHED" && form.grade ? form.grade : undefined,
       price,
       salePrice: Number.isFinite(salePrice) && salePrice > 0 ? salePrice : price,
-      warranty: form.warranty.trim() || "Ask for warranty",
+      warranty: form.warranty.trim(),
       specs: form.specs.split(",").map((item) => item.trim()).filter(Boolean),
       shortDescription: form.shortDescription.trim() || name,
       featured: form.featured,
@@ -161,17 +165,41 @@ export function ProductsScreen() {
     setOpen(false);
   }
 
+  function onBulkDelete() {
+    if (selectedIds.length === 0) {
+      return;
+    }
+    if (!window.confirm(`Delete ${selectedIds.length} selected product${selectedIds.length === 1 ? "" : "s"}?`)) {
+      return;
+    }
+    deleteProducts(selectedIds);
+    setSelectedIds([]);
+    toast.success("Selected products deleted.");
+  }
+
   return (
     <AdminPage
       title="Products"
-      description="Add laptops, printers, CCTV and other SKUs. Create the brand and category first if they are new."
-      actions={<Button onClick={openCreate}>Add product</Button>}
+      description="Add, edit or delete SKUs. Select rows to delete more than one. Saved on this device until a database is connected."
+      actions={
+        <div className="flex flex-wrap gap-2">
+          {selectedIds.length > 0 ? (
+            <Button variant="destructive" onClick={onBulkDelete}>
+              Delete selected ({selectedIds.length})
+            </Button>
+          ) : null}
+          <Button onClick={openCreate}>Add product</Button>
+        </div>
+      }
     >
       <AdminTable
         rows={catalog.products}
         searchPlaceholder="Search name, SKU or brand"
         searchText={(row) => `${row.name} ${row.sku} ${row.brand} ${row.categorySlug}`}
         empty="No products yet. Add one to get started."
+        getRowId={(row) => row.id}
+        selectedIds={selectedIds}
+        onSelectedIdsChange={setSelectedIds}
         columns={[
           {
             header: "Product",
@@ -193,6 +221,10 @@ export function ProductsScreen() {
             ),
           },
           { header: "Price", cell: (row) => formatInr(row.salePrice, { compact: true }) },
+          {
+            header: "Qty",
+            cell: (row) => catalog.inventory.find((item) => item.id === row.id)?.onHand ?? row.onHand ?? 0,
+          },
           { header: "Stock", cell: (row) => (row.inStock ? "In stock" : "Out of stock") },
           {
             header: "Actions",

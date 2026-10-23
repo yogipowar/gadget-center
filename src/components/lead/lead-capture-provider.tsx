@@ -3,7 +3,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 import { LeadCaptureDialog } from "@/components/lead/lead-capture-dialog";
-import { LOCAL_STORAGE_KEYS } from "@/constants/storage";
 import { captureAttributionFromWindow } from "@/lib/tracking/client-attribution";
 
 type LeadCaptureContextValue = {
@@ -17,10 +16,14 @@ export function LeadCaptureProvider({ children }: { children: React.ReactNode })
   const openLeadCapture = useCallback(() => setOpen(true), []);
   const value = useMemo(() => ({ openLeadCapture }), [openLeadCapture]);
 
+  useEffect(() => {
+    captureAttributionFromWindow();
+  }, []);
+
   return (
     <LeadCaptureContext.Provider value={value}>
       {children}
-      <LeadCaptureDialog open={open} onOpenChange={setOpen} />
+      {open ? <LeadCaptureDialog open={open} onOpenChange={setOpen} /> : null}
     </LeadCaptureContext.Provider>
   );
 }
@@ -31,19 +34,4 @@ export function useLeadCapture() {
     throw new Error("useLeadCapture must be used within LeadCaptureProvider");
   }
   return context;
-}
-
-export function HomeLeadGate() {
-  const { openLeadCapture } = useLeadCapture();
-
-  useEffect(() => {
-    captureAttributionFromWindow();
-    if (window.localStorage.getItem(LOCAL_STORAGE_KEYS.leadSubmitted)) {
-      return;
-    }
-    const timer = window.setTimeout(() => openLeadCapture(), 700);
-    return () => window.clearTimeout(timer);
-  }, [openLeadCapture]);
-
-  return null;
 }

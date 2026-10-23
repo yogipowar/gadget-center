@@ -19,6 +19,7 @@ export type CatalogProduct = {
   bestseller: boolean;
   newArrival: boolean;
   inStock: boolean;
+  onHand?: number;
   accent: "navy" | "slate" | "teal" | "stone";
   image?: string;
   images?: string[];
@@ -27,7 +28,9 @@ export type CatalogProduct = {
 export type CatalogQuery = {
   categorySlug?: string;
   brand?: string;
+  brands?: string[];
   condition?: ProductCondition;
+  conditions?: ProductCondition[];
   productType?: ProductType;
   minPrice?: number;
   maxPrice?: number;

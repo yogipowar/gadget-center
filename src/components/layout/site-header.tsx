@@ -23,7 +23,7 @@ import { useAdminCatalog } from "@/features/admin/catalog-store";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: routes.laptops, label: "New Products" },
+  { href: routes.products, label: "Products" },
   { href: routes.refurbishedLaptops, label: "Refurbished" },
   { href: routes.desktops, label: "Desktop" },
   { href: routes.accessories, label: "Accessories" },
@@ -58,13 +58,13 @@ export function SiteHeader() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background">
-      <div className="border-b border-border bg-muted/40">
-        <div className="mx-auto flex h-9 w-full max-w-6xl items-center justify-between px-4 text-xs text-muted-foreground">
-          <p>New & refurbished laptops, computers, printers, UPS and CCTV</p>
+    <header className="sticky top-0 z-40 border-b border-border bg-white">
+      <div className="bg-brand-navy text-white">
+        <div className="mx-auto flex h-9 w-full max-w-6xl items-center justify-between px-4 text-xs">
+          <p className="text-white/80">Refurbished Dell & HP business laptops · Adapter included</p>
           <button
             type="button"
-            className="hidden font-medium text-foreground sm:inline hover:underline"
+            className="hidden font-medium text-white sm:inline hover:underline"
             onClick={openLeadCapture}
           >
             Get Expert Help
@@ -94,15 +94,20 @@ export function SiteHeader() {
           />
         </Link>
 
-        <form onSubmit={onSearch} className="relative hidden min-w-0 flex-1 md:block">
-          <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+        <form onSubmit={onSearch} className="relative hidden min-w-0 flex-1 md:flex">
+          <Search className="pointer-events-none absolute top-1/2 left-2.5 z-10 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search laptops, brands, SKU..."
-            className="h-10 pl-8"
+            className="h-10 min-w-0 flex-1 rounded-r-none border-r-0 pl-8"
             aria-label="Search products"
+            autoComplete="off"
+            name="product-search"
           />
+          <Button type="submit" className="h-10 rounded-l-none bg-brand-navy px-4 hover:bg-brand-navy/90">
+            Search
+          </Button>
           {suggestions.length > 0 ? (
             <ul className="absolute top-full z-50 mt-1 w-full rounded-lg border border-border bg-popover py-1 shadow-sm">
               {suggestions.map((product) => (
@@ -135,7 +140,7 @@ export function SiteHeader() {
           >
             <ShoppingCart />
             {count > 0 ? (
-              <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] text-primary-foreground">
+              <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-green px-1 text-[10px] text-white">
                 {count}
               </span>
             ) : null}
@@ -143,13 +148,13 @@ export function SiteHeader() {
         </nav>
       </div>
 
-      <div className="hidden border-t border-border lg:block">
+      <div className="hidden bg-brand-navy lg:block">
         <div className="mx-auto flex h-11 w-full max-w-6xl items-center gap-5 overflow-x-auto px-4">
-          <Link href={routes.products} className="text-sm font-medium hover:underline">
+          <Link href={routes.products} className="text-sm font-medium text-white hover:underline">
             Categories
           </Link>
           {navItems.map((item) => (
-            <Link key={item.href} href={item.href} className="text-sm text-muted-foreground hover:text-foreground">
+            <Link key={item.href} href={item.href} className="text-sm text-white/85 hover:text-white">
               {item.label}
             </Link>
           ))}
@@ -175,6 +180,8 @@ export function SiteHeader() {
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search products"
               className="h-10"
+              autoComplete="off"
+              name="product-search-mobile"
             />
           </form>
           <nav className="flex flex-col gap-1 overflow-y-auto p-4">

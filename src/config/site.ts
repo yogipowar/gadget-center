@@ -2,9 +2,9 @@ import { publicEnv } from "@/config/public-env";
 
 export const siteConfig = {
   name: publicEnv.siteName,
-  tagline: "New & Refurbished Laptops & Computers at the Right Price",
+  tagline: "Refurbished Dell & HP Business Laptops",
   description:
-    "Shop laptops, desktops, printers, UPS, CCTV, appliances and computer accessories from trusted brands.",
+    "Import stock of refurbished business laptops. Adapter included. Bulk and corporate orders welcome.",
   locale: "en-IN",
   currency: "INR",
   timezone: "Asia/Kolkata",

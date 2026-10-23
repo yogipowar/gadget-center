@@ -25,6 +25,9 @@ export function AdminTable<T>({
   searchText,
   empty,
   toolbar,
+  getRowId,
+  selectedIds,
+  onSelectedIdsChange,
 }: {
   rows: T[];
   columns: AdminColumn<T>[];
@@ -32,6 +35,9 @@ export function AdminTable<T>({
   searchText: (row: T) => string;
   empty: string;
   toolbar?: ReactNode;
+  getRowId?: (row: T) => string;
+  selectedIds?: string[];
+  onSelectedIdsChange?: (ids: string[]) => void;
 }) {
   const [query, setQuery] = useState("");
   const filtered = useMemo(() => {
@@ -41,6 +47,42 @@ export function AdminTable<T>({
     }
     return rows.filter((row) => searchText(row).toLowerCase().includes(needle));
   }, [query, rows, searchText]);
+
+  const selectable = Boolean(getRowId && onSelectedIdsChange);
+  const selected = new Set(selectedIds ?? []);
+  const filteredIds = selectable && getRowId ? filtered.map((row) => getRowId(row)) : [];
+  const allFilteredSelected =
+    filteredIds.length > 0 && filteredIds.every((id) => selected.has(id));
+  const colSpan = columns.length + (selectable ? 1 : 0);
+
+  function toggle(id: string) {
+    if (!onSelectedIdsChange) {
+      return;
+    }
+    const next = new Set(selected);
+    if (next.has(id)) {
+      next.delete(id);
+    } else {
+      next.add(id);
+    }
+    onSelectedIdsChange([...next]);
+  }
+
+  function toggleAllFiltered() {
+    if (!onSelectedIdsChange) {
+      return;
+    }
+    if (allFilteredSelected) {
+      const drop = new Set(filteredIds);
+      onSelectedIdsChange((selectedIds ?? []).filter((id) => !drop.has(id)));
+      return;
+    }
+    const next = new Set(selectedIds ?? []);
+    for (const id of filteredIds) {
+      next.add(id);
+    }
+    onSelectedIdsChange([...next]);
+  }
 
   return (
     <div className="space-y-3">
@@ -57,6 +99,16 @@ export function AdminTable<T>({
         <Table>
           <TableHeader>
             <TableRow>
+              {selectable ? (
+                <TableHead className="w-10">
+                  <input
+                    type="checkbox"
+                    aria-label="Select all visible rows"
+                    checked={allFilteredSelected}
+                    onChange={toggleAllFiltered}
+                  />
+                </TableHead>
+              ) : null}
               {columns.map((column) => (
                 <TableHead key={column.header} className={column.className}>
                   {column.header}
@@ -67,26 +119,40 @@ export function AdminTable<T>({
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={columns.length} className="py-10 text-center text-muted-foreground">
+                <TableCell colSpan={colSpan} className="py-10 text-center text-muted-foreground">
                   {empty}
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((row, index) => (
-                <TableRow key={index}>
-                  {columns.map((column) => (
-                    <TableCell key={column.header} className={column.className}>
-                      {column.cell(row)}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
+              filtered.map((row, index) => {
+                const id = getRowId?.(row);
+                return (
+                  <TableRow key={id ?? index}>
+                    {selectable && id ? (
+                      <TableCell className="w-10">
+                        <input
+                          type="checkbox"
+                          aria-label="Select row"
+                          checked={selected.has(id)}
+                          onChange={() => toggle(id)}
+                        />
+                      </TableCell>
+                    ) : null}
+                    {columns.map((column) => (
+                      <TableCell key={column.header} className={column.className}>
+                        {column.cell(row)}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
       </div>
       <p className="text-xs text-muted-foreground">
         Showing {filtered.length} of {rows.length}
+        {selectable && selected.size > 0 ? ` · ${selected.size} selected` : ""}
       </p>
     </div>
   );

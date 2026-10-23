@@ -22,7 +22,7 @@ const empty = {
   grade: "A" as RefurbishedGrade,
   status: "AVAILABLE" as RefurbishedUnitStatus,
   batteryHealth: "90%",
-  warranty: "6 months in-house warranty",
+  warranty: "",
 };
 
 export function RefurbishedScreen() {

@@ -5,7 +5,7 @@ import { ProductsPageClient } from "@/app/(storefront)/products/products-page-cl
 
 export const metadata: Metadata = {
   title: "All Products",
-  description: "Browse new and refurbished laptops, desktops and computer accessories.",
+  description: "Browse refurbished Dell and HP business laptops. Adapter included.",
 };
 
 export default function ProductsPage() {

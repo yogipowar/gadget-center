@@ -8,6 +8,7 @@ export const createLeadSchema = z.object({
   mobile: indianMobileSchema,
   address: z.string().trim().min(8, "Enter your address").max(500),
   interestedCategory: z.enum(LEAD_INTEREST_OPTIONS).optional(),
+  requirement: z.string().trim().max(500).optional(),
   email: z.email().optional(),
 });
 

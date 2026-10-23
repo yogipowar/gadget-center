@@ -1,4 +1,4 @@
-import type { LeadInterest, LeadPriority, LeadSource, LeadStatus } from "@/constants/leads";
+import type { LeadPriority, LeadSource, LeadStatus } from "@/constants/leads";
 import { LEAD_INTEREST_LABELS } from "@/constants/leads";
 import type { OrderStatus, PaymentMethod, PaymentStatus } from "@/constants/orders";
 import type { StaffRole } from "@/constants/roles";
@@ -65,6 +65,12 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   COD: "Cash on delivery",
   ENQUIRY: "Enquiry / request",
   RAZORPAY: "Razorpay",
+};
+
+export const ENQUIRY_STATUS_LABELS: Record<"OPEN" | "REPLIED" | "CLOSED", string> = {
+  OPEN: "Open",
+  REPLIED: "Replied",
+  CLOSED: "Closed",
 };
 
 export const UNIT_STATUS_LABELS: Record<RefurbishedUnitStatus, string> = {

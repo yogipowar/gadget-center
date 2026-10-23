@@ -29,7 +29,7 @@ export function ProductMedia({
     <div
       className={cn(
         "relative overflow-hidden",
-        compact ? "aspect-[16/10]" : "aspect-[4/3]",
+        compact ? "aspect-square" : "aspect-[4/3]",
         image ? "bg-zinc-100" : accentClass[accent],
         className,
       )}

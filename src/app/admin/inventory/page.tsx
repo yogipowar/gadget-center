@@ -1,9 +1,1 @@
-import type { Metadata } from "next";
-
-import { InventoryScreen } from "@/components/admin/screens/inventory-screen";
-
-export const metadata: Metadata = { title: "Inventory" };
-
-export default function AdminInventoryPage() {
-  return <InventoryScreen />;
-}
+export { AdminUnusedRedirect as default } from "@/components/admin/admin-unused-redirect";

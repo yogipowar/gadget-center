@@ -16,7 +16,7 @@ export function ReviewsScreen() {
         rows={adminReviews}
         searchPlaceholder="Search product or customer"
         searchText={(row) => `${row.product} ${row.customer} ${row.comment}`}
-        empty="No reviews match this search."
+        empty="No reviews yet. The storefront stays empty until a real review is published."
         columns={[
           { header: "Product", cell: (row: AdminReview) => row.product },
           { header: "Customer", cell: (row: AdminReview) => row.customer },

@@ -11,7 +11,7 @@ export default function StorefrontLayout({
     <LeadCaptureProvider>
       <div className="flex min-h-full flex-1 flex-col">
         <SiteHeader />
-        <main className="flex flex-1 flex-col">{children}</main>
+        <main className="flex flex-1 flex-col bg-white text-zinc-900">{children}</main>
         <SiteFooter />
       </div>
     </LeadCaptureProvider>

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
 import { ProductMedia } from "@/components/product/product-media";
 import { cn } from "@/lib/utils";
@@ -34,13 +34,8 @@ export function ProductGallery({ images, name, accent }: ProductGalleryProps) {
   const [zooming, setZooming] = useState(false);
   const [pointer, setPointer] = useState({ x: 0.5, y: 0.5 });
   const [stageSize, setStageSize] = useState({ width: 480, height: 360 });
-
-  useEffect(() => {
-    setActive(0);
-    setZooming(false);
-  }, [name, shots[0]]);
-
-  const current = shots[active];
+  const currentIndex = shots.length === 0 ? 0 : Math.min(active, shots.length - 1);
+  const current = shots[currentIndex];
   const lensLeft = clamp(pointer.x - LENS / 2, 0, 1 - LENS);
   const lensTop = clamp(pointer.y - LENS / 2, 0, 1 - LENS);
 
@@ -83,12 +78,12 @@ export function ProductGallery({ images, name, accent }: ProductGalleryProps) {
               onClick={() => setActive(index)}
               className={cn(
                 "relative size-16 shrink-0 overflow-hidden rounded-lg border bg-zinc-100 transition-colors",
-                index === active
+                index === currentIndex
                   ? "border-foreground ring-1 ring-foreground"
                   : "border-border hover:border-foreground/40",
               )}
               aria-label={`${name} image ${index + 1} of ${shots.length}`}
-              aria-current={index === active}
+              aria-current={index === currentIndex}
             >
               <Image src={src} alt="" fill sizes="64px" className="object-contain p-1" />
             </button>
@@ -108,9 +103,9 @@ export function ProductGallery({ images, name, accent }: ProductGalleryProps) {
             >
               <Image
                 src={current}
-                alt={`${name}, view ${active + 1}`}
+                alt={`${name}, view ${currentIndex + 1}`}
                 fill
-                preload={active === 0}
+                preload={currentIndex === 0}
                 loading="eager"
                 sizes="(max-width: 1024px) 100vw, 560px"
                 className="object-contain p-3 sm:p-5"
@@ -147,7 +142,7 @@ export function ProductGallery({ images, name, accent }: ProductGalleryProps) {
                     <ChevronRight className="size-4" />
                   </button>
                   <p className="pointer-events-none absolute right-3 bottom-3 rounded-full bg-foreground/75 px-2 py-0.5 text-[11px] font-medium text-background">
-                    {active + 1} / {shots.length}
+                    {currentIndex + 1} / {shots.length}
                   </p>
                 </>
               ) : null}
