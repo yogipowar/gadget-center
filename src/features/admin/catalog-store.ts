@@ -22,7 +22,7 @@ import type {
 import { catalogProducts } from "@/features/catalog/products";
 import type { CatalogProduct } from "@/features/catalog/types";
 
-const STORE_VERSION = 6;
+const STORE_VERSION = 7;
 
 export type AdminCatalogState = {
   version: number;

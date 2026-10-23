@@ -43,6 +43,7 @@ jobs:
         env:
           GITHUB_PAGES: "true"
           PAGES_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          NEXT_PUBLIC_BASE_PATH: /gadget-center
           NEXT_PUBLIC_APP_URL: https://yogipowar.github.io/gadget-center
           NEXT_PUBLIC_SITE_NAME: GadgetCenter
           NEXT_PUBLIC_WHATSAPP_NUMBER: "918530613876"

@@ -267,49 +267,6 @@ export function pickDiverseCatalog(products: CatalogProduct[], limit: number) {
   return picked;
 }
 
-const TYPE_GALLERY: Partial<Record<CatalogProduct["productType"], string[]>> = {
-  LAPTOP: [
-    "/products/gallery/laptop-2.png",
-    "/products/gallery/laptop-3.png",
-    "/products/gallery/laptop-4.png",
-  ],
-  DESKTOP: ["/products/gallery/desktop-2.png", "/products/gallery/desktop-3.png"],
-  CUSTOM_PC: ["/products/gallery/custom-pc-2.png", "/products/gallery/custom-pc-3.png"],
-  PRINTER: ["/products/gallery/printer-2.png", "/products/gallery/printer-3.png"],
-  MONITOR: ["/products/gallery/monitor-2.png", "/products/gallery/monitor-3.png"],
-  UPS: ["/products/gallery/ups-2.png", "/products/gallery/ups-3.png"],
-  NETWORKING: ["/products/gallery/router-2.png", "/products/gallery/router-3.png"],
-  CCTV: ["/products/gallery/cctv-2.png", "/products/gallery/cctv-3.png"],
-  APPLIANCE: ["/products/gallery/tv-2.png", "/products/gallery/tv-3.png"],
-  ROBOTICS: ["/products/gallery/robot-2.png", "/products/gallery/robot-3.png"],
-};
-
-function extrasFor(product: CatalogProduct) {
-  if (product.productType === "AUDIO") {
-    return product.slug.includes("mic")
-      ? ["/products/gallery/mic-2.png"]
-      : ["/products/gallery/audio-2.png"];
-  }
-  if (product.productType === "ACCESSORY") {
-    if (product.slug.includes("keys") || product.slug.includes("keyboard")) {
-      return ["/products/gallery/keyboard-2.png", "/products/gallery/keyboard-3.png"];
-    }
-    if (product.slug.includes("mouse")) {
-      return ["/products/gallery/mouse-2.png"];
-    }
-    if (product.slug.includes("hdmi") || product.slug.includes("cable")) {
-      return ["/products/gallery/cable-2.png"];
-    }
-    if (product.slug.includes("ram")) {
-      return ["/products/gallery/ram-2.png"];
-    }
-    if (product.slug.includes("ssd")) {
-      return ["/products/gallery/ssd-2.png"];
-    }
-  }
-  return TYPE_GALLERY[product.productType] ?? [];
-}
-
 export function productGallery(product: CatalogProduct) {
   const unique = new Set<string>();
   if (product.image) {
@@ -317,11 +274,6 @@ export function productGallery(product: CatalogProduct) {
   }
   for (const src of product.images ?? []) {
     unique.add(src);
-  }
-  if (!product.images?.length) {
-    for (const src of extrasFor(product)) {
-      unique.add(src);
-    }
   }
   return [...unique];
 }

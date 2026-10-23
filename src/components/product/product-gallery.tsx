@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRef, useState } from "react";
 
 import { ProductMedia } from "@/components/product/product-media";
+import { assetPath } from "@/lib/asset-path";
 import { cn } from "@/lib/utils";
 
 const LENS = 0.42;
@@ -85,7 +86,7 @@ export function ProductGallery({ images, name, accent }: ProductGalleryProps) {
               aria-label={`${name} image ${index + 1} of ${shots.length}`}
               aria-current={index === currentIndex}
             >
-              <Image src={src} alt="" fill sizes="64px" className="object-contain p-1" />
+              <Image src={assetPath(src)} alt="" fill sizes="64px" className="object-contain p-1" />
             </button>
           ))}
         </div>
@@ -102,7 +103,7 @@ export function ProductGallery({ images, name, accent }: ProductGalleryProps) {
               onMouseLeave={() => setZooming(false)}
             >
               <Image
-                src={current}
+                src={assetPath(current)}
                 alt={`${name}, view ${currentIndex + 1}`}
                 fill
                 preload={currentIndex === 0}
@@ -171,7 +172,7 @@ export function ProductGallery({ images, name, accent }: ProductGalleryProps) {
               }}
             >
               <Image
-                src={current}
+                src={assetPath(current)}
                 alt=""
                 fill
                 sizes="1200px"

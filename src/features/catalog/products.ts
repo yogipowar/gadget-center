@@ -2,11 +2,7 @@ import type { CatalogProduct } from "@/features/catalog/types";
 
 const SHORT =
   "Refurbished business laptop. 100% import stock. Adapter included.";
-const GALLERY = [
-  "/products/gallery/laptop-2.png",
-  "/products/gallery/laptop-3.png",
-  "/products/gallery/laptop-4.png",
-];
+const GALLERY: string[] = [];
 
 function listedPrice(amount: number) {
   return Math.round((amount * 115) / 100);
@@ -109,7 +105,7 @@ export const catalogProducts: CatalogProduct[] = [
     brand: "Dell",
     processor: "Intel Core i5, 10th Gen",
     screen: "14-inch",
-    image: "/products/dell-latitude-5410-refurbished.png",
+    image: "/products/dell-latitude-5410.jpg",
     listed: 25300,
     onHand: 3,
     featured: true,

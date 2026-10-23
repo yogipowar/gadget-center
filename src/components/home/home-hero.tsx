@@ -5,6 +5,7 @@ import { ExpertHelpButton } from "@/components/lead/expert-help-button";
 import { buttonVariants } from "@/components/ui/button";
 import { routes } from "@/config/routes";
 import { siteConfig } from "@/config/site";
+import { assetPath } from "@/lib/asset-path";
 import { cn } from "@/lib/utils";
 
 export function HomeHero() {
@@ -54,7 +55,7 @@ export function HomeHero() {
           <div className="pointer-events-none absolute inset-[10%] rounded-full bg-sky-400/25 blur-3xl" />
           <div className="hero-float relative z-10">
             <Image
-              src="/hero-laptop-3d.png"
+              src={assetPath("/hero-laptop-3d.png")}
               alt="Laptop for sale at GadgetCenter"
               width={720}
               height={720}

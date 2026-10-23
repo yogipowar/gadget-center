@@ -4,6 +4,7 @@
  */
 export const publicEnv = {
   appUrl: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+  basePath: process.env.NEXT_PUBLIC_BASE_PATH ?? "",
   siteName: process.env.NEXT_PUBLIC_SITE_NAME ?? "GadgetCenter",
   metaPixelId: process.env.NEXT_PUBLIC_META_PIXEL_ID ?? "",
   whatsappNumber: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "918530613876",

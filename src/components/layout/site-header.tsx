@@ -20,6 +20,7 @@ import { siteConfig } from "@/config/site";
 import { cartCount, useCart } from "@/features/cart/store";
 import { searchSuggestions } from "@/features/catalog/queries";
 import { useAdminCatalog } from "@/features/admin/catalog-store";
+import { assetPath } from "@/lib/asset-path";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -85,7 +86,7 @@ export function SiteHeader() {
 
         <Link href={routes.home} className="flex shrink-0 items-center" aria-label={siteConfig.name}>
           <Image
-            src="/logo.png"
+            src={assetPath("/logo.png")}
             alt={siteConfig.name}
             width={168}
             height={84}
@@ -166,7 +167,7 @@ export function SiteHeader() {
           <SheetHeader>
             <SheetTitle className="flex items-center">
               <Image
-                src="/logo.png"
+                src={assetPath("/logo.png")}
                 alt={siteConfig.name}
                 width={168}
                 height={84}
