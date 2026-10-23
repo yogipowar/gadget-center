@@ -10,7 +10,7 @@ const categoryMeta: Record<string, { title: string; description: string }> = {
   },
   "refurbished-laptops": {
     title: "Refurbished Laptops",
-    description: "Tested business laptops with condition grade and listed warranty.",
+    description: "Dell and HP business laptops. Import stock. Adapter included. Bulk orders welcome.",
   },
   desktops: {
     title: "New Desktop PCs",

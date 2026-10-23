@@ -2,7 +2,7 @@
 
 import { SlidersHorizontal } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 
 import { ProductFilters } from "@/components/product/product-filters";
 import { ProductGrid } from "@/components/product/product-grid";
@@ -46,7 +46,24 @@ function parseConditions(values: string[]): ProductCondition[] {
   );
 }
 
-export function ProductListing({ title, description, filters }: ProductListingProps) {
+export function ProductListing(props: ProductListingProps) {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto w-full max-w-6xl px-4 py-8">
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{props.title}</h1>
+          {props.description ? (
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{props.description}</p>
+          ) : null}
+        </div>
+      }
+    >
+      <ProductListingInner {...props} />
+    </Suspense>
+  );
+}
+
+function ProductListingInner({ title, description, filters }: ProductListingProps) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
