@@ -32,7 +32,9 @@ const nextConfig = {
         trailingSlash: true,
         basePath: pagesBasePath,
       }
-    : {}),
+    : {
+        output: "standalone",
+      }),
 };
 
 export default nextConfig;
