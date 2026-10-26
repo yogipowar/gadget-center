@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { ProductDetailClient } from "@/app/(storefront)/product/[slug]/product-detail-client";
-import { catalogProducts, getProductBySlug } from "@/features/catalog/queries";
+import { catalogProducts, getProductBySlug, productListingCopy } from "@/features/catalog/queries";
 import { loadCatalog } from "@/lib/catalog-server";
 
 type ProductPageProps = {
@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   }
   return {
     title: product.name,
-    description: product.shortDescription,
+    description: productListingCopy(product).slice(0, 160),
   };
 }
 

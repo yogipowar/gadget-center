@@ -1,13 +1,10 @@
 import Link from "next/link";
 
+import { legal } from "@/config/legal";
 import { routes } from "@/config/routes";
 import { siteConfig } from "@/config/site";
 import { additionalCategories, computerCategories } from "@/features/catalog/queries";
-
-function telHref(phone: string) {
-  const digits = phone.replace(/\D/g, "");
-  return `tel:+91${digits.replace(/^91/, "")}`;
-}
+import { formatPhone, telHref } from "@/lib/contact";
 
 export function SiteFooter() {
   return (
@@ -19,18 +16,21 @@ export function SiteFooter() {
           <p className="mt-4 text-sm text-white/70">{siteConfig.contact.address}</p>
           <p className="mt-2 text-sm">
             <a className="hover:underline" href={telHref(siteConfig.contact.orderPhone)}>
-              Orders: +91 {siteConfig.contact.orderPhone}
+              Orders: {formatPhone(siteConfig.contact.orderPhone)}
             </a>
           </p>
           <p className="mt-1 text-sm">
             <a className="hover:underline" href={telHref(siteConfig.contact.repairPhone)}>
-              Repair: +91 {siteConfig.contact.repairPhone}
+              Repair: {formatPhone(siteConfig.contact.repairPhone)}
             </a>
           </p>
           <p className="mt-1 text-sm">
             <a className="hover:underline" href={`mailto:${siteConfig.contact.email}`}>
               {siteConfig.contact.email}
             </a>
+          </p>
+          <p className="mt-2 text-xs text-white/55">
+            {legal.hours}. {legal.closed}.
           </p>
         </div>
         <div>
@@ -72,7 +72,7 @@ export function SiteFooter() {
             </li>
             <li>
               <Link href={routes.contact} className="hover:text-white">
-                Contact
+                Contact Us
               </Link>
             </li>
             <li>
@@ -82,12 +82,17 @@ export function SiteFooter() {
             </li>
             <li>
               <Link href={routes.terms} className="hover:text-white">
-                Terms
+                Terms &amp; Conditions
               </Link>
             </li>
             <li>
               <Link href={routes.refundPolicy} className="hover:text-white">
-                Refund Policy
+                Refund &amp; Cancellation
+              </Link>
+            </li>
+            <li>
+              <Link href={routes.shippingPolicy} className="hover:text-white">
+                Shipping Policy
               </Link>
             </li>
             <li>

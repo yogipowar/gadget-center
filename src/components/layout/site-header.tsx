@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/sheet";
 import { routes } from "@/config/routes";
 import { siteConfig } from "@/config/site";
+import { formatPhone, telHref } from "@/lib/contact";
 import { cartCount, useCart } from "@/features/cart/store";
 import { searchSuggestions } from "@/features/catalog/queries";
 import { useAdminCatalog } from "@/features/admin/catalog-store";
@@ -62,14 +63,21 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-border bg-white">
       <div className="bg-brand-navy text-white">
         <div className="mx-auto flex h-9 w-full max-w-6xl items-center justify-between px-4 text-xs">
-          <p className="text-white/80">Refurbished Dell & HP business laptops · Adapter included</p>
-          <button
-            type="button"
-            className="hidden font-medium text-white sm:inline hover:underline"
-            onClick={openLeadCapture}
+          <p className="truncate text-white/80">
+            <a className="hover:underline" href={telHref(siteConfig.contact.orderPhone)}>
+              {formatPhone(siteConfig.contact.orderPhone)}
+            </a>
+            <span className="hidden sm:inline">
+              {" "}
+              · {siteConfig.contact.email} · Kolhapur
+            </span>
+          </p>
+          <Link
+            href={routes.contact}
+            className="hidden shrink-0 font-medium text-white sm:inline hover:underline"
           >
-            Get Expert Help
-          </button>
+            Contact Us
+          </Link>
         </div>
       </div>
 

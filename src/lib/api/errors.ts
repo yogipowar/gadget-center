@@ -61,6 +61,13 @@ export class RateLimitError extends AppError {
   }
 }
 
+export class ServiceUnavailableError extends AppError {
+  constructor(message = "This service is not available yet") {
+    super(message, 503, "SERVICE_UNAVAILABLE");
+    this.name = "ServiceUnavailableError";
+  }
+}
+
 export function isAppError(error: unknown): error is AppError {
   return error instanceof AppError;
 }

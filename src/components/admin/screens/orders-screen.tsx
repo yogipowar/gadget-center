@@ -17,7 +17,7 @@ export function OrdersScreen() {
   const { orders, loaded } = useAdminOrders();
 
   return (
-    <AdminPage title="Orders" description="COD orders placed from the storefront checkout.">
+    <AdminPage title="Orders" description="Online payments from the storefront checkout.">
       <AdminTable
         rows={orders}
         searchPlaceholder="Search order number, customer or mobile"

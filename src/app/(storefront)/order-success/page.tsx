@@ -4,8 +4,8 @@ import { SimplePage, simpleMetadata } from "@/components/layout/simple-page";
 import { routes } from "@/config/routes";
 
 export const metadata = simpleMetadata(
-  "Order received",
-  "Your order has been saved and our team will contact you.",
+  "Payment received",
+  "Your online payment succeeded and the order is confirmed.",
 );
 
 type OrderSuccessPageProps = {
@@ -17,11 +17,11 @@ export default async function OrderSuccessPage({ searchParams }: OrderSuccessPag
 
   return (
     <SimplePage
-      title="Order received"
+      title="Payment received"
       description={
         order
-          ? `Order ${order} is saved. Our team will contact you on the mobile number you shared.`
-          : "Your order or enquiry request has been noted. Our team will contact you on the mobile number you shared."
+          ? `Order ${order} is confirmed. We will contact you on the mobile number you shared for delivery.`
+          : "Your payment is confirmed. We will contact you on the mobile number you shared for delivery."
       }
     >
       <p>

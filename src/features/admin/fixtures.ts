@@ -71,7 +71,7 @@ export const adminLeads: AdminLead[] = [
     source: "ORGANIC",
     assignedTo: "Priya Kulkarni",
     createdAt: "2026-08-24",
-    notes: "Dell Latitude 5590 for tuition classes. Prefers COD on arrival.",
+    notes: "Dell Latitude 5590 for tuition classes. Prefers online payment.",
   },
   {
     id: "l5",
@@ -197,8 +197,8 @@ export const adminOrders: AdminOrder[] = [
     items: "HP EliteBook 630 G8 Touch",
     total: 35420,
     status: "CONFIRMED",
-    paymentStatus: "COD_PENDING",
-    paymentMethod: "COD",
+    paymentStatus: "PAID",
+    paymentMethod: "RAZORPAY",
     createdAt: "2026-08-27",
   },
   {
@@ -222,7 +222,7 @@ export const adminOrders: AdminOrder[] = [
     total: 29728,
     status: "DELIVERED",
     paymentStatus: "PAID",
-    paymentMethod: "COD",
+    paymentMethod: "RAZORPAY",
     createdAt: "2026-08-24",
   },
   {
@@ -234,7 +234,7 @@ export const adminOrders: AdminOrder[] = [
     total: 25933,
     status: "DELIVERED",
     paymentStatus: "PAID",
-    paymentMethod: "COD",
+    paymentMethod: "RAZORPAY",
     createdAt: "2026-08-19",
   },
   {
@@ -245,8 +245,8 @@ export const adminOrders: AdminOrder[] = [
     items: "Dell Latitude 5410 i5 10th Gen",
     total: 29095,
     status: "SHIPPED",
-    paymentStatus: "COD_PENDING",
-    paymentMethod: "COD",
+    paymentStatus: "PAID",
+    paymentMethod: "RAZORPAY",
     createdAt: "2026-08-30",
   },
   {
@@ -258,7 +258,7 @@ export const adminOrders: AdminOrder[] = [
     total: 37949,
     status: "DELIVERED",
     paymentStatus: "PAID",
-    paymentMethod: "COD",
+    paymentMethod: "RAZORPAY",
     createdAt: "2026-08-15",
   },
 ];

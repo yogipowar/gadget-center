@@ -7,8 +7,10 @@ import { OrderItem } from "@/database/models/order-item";
 import { ShopOrder } from "@/database/models/order";
 import { ensureDatabase } from "@/database/sequelize";
 import type { AdminOrder } from "@/features/admin/types";
-import type { CartLine } from "@/features/cart/types";
-import { ValidationError } from "@/lib/api/errors";
+import type { CartLine, CheckoutPayment } from "@/features/cart/types";
+import { env } from "@/config/env";
+import { NotFoundError, ValidationError } from "@/lib/api/errors";
+import { createRazorpayOrder } from "@/lib/payments/razorpay";
 import { getProductBySlug, reduceStock } from "@/services/product-service";
 
 export type CheckoutInput = {
@@ -21,6 +23,8 @@ export type CheckoutInput = {
   pincode: string;
   items: CartLine[];
 };
+
+export type { CheckoutPayment };
 
 function toAdminOrder(row: ShopOrder): AdminOrder {
   return {
@@ -43,7 +47,28 @@ export async function listOrders() {
   return rows.map(toAdminOrder);
 }
 
-export async function createOrder(input: CheckoutInput) {
+async function markOrderPaid(order: ShopOrder, paymentId: string) {
+  if (order.paymentStatus === "PAID") {
+    return toAdminOrder(order);
+  }
+
+  const items = await OrderItem.findAll({ where: { orderId: order.id } });
+  for (const item of items) {
+    if (item.productId) {
+      await reduceStock(item.productId, item.quantity);
+    }
+  }
+
+  await order.update({
+    paymentStatus: "PAID",
+    paymentMethod: "RAZORPAY",
+    status: "CONFIRMED",
+    razorpayPaymentId: paymentId,
+  });
+  return toAdminOrder(order);
+}
+
+export async function createCheckout(input: CheckoutInput) {
   await ensureDatabase();
   const name = input.customerName.trim();
   const mobile = input.mobile.replace(/\D/g, "");
@@ -71,10 +96,17 @@ export async function createOrder(input: CheckoutInput) {
     .map((line) => `${line.quantity} x ${line.product.name}`)
     .join(", ")
     .slice(0, 500);
+  const orderNumber = `${ORDER_NUMBER_PREFIX}${Date.now().toString().slice(-8)}`;
+
+  const razorpay = await createRazorpayOrder({
+    amountRupees: total,
+    receipt: orderNumber,
+    notes: { orderNumber, mobile },
+  });
 
   const order = await ShopOrder.create({
     id: randomUUID(),
-    orderNumber: `${ORDER_NUMBER_PREFIX}${Date.now().toString().slice(-8)}`,
+    orderNumber,
     customerName: name,
     mobile,
     email: input.email?.trim() || null,
@@ -85,8 +117,9 @@ export async function createOrder(input: CheckoutInput) {
     itemsSummary,
     total,
     status: "PENDING",
-    paymentStatus: "COD_PENDING",
-    paymentMethod: "COD",
+    paymentStatus: "PENDING",
+    paymentMethod: "RAZORPAY",
+    razorpayOrderId: razorpay.orderId,
   });
 
   for (const line of lines) {
@@ -99,8 +132,33 @@ export async function createOrder(input: CheckoutInput) {
       quantity: line.quantity,
       unitPrice: line.product.salePrice,
     });
-    await reduceStock(line.product.id, line.quantity);
   }
 
-  return toAdminOrder(order);
+  const payment: CheckoutPayment = {
+    keyId: razorpay.keyId,
+    orderId: razorpay.orderId,
+    amount: razorpay.amount,
+    currency: razorpay.currency,
+    name: env.NEXT_PUBLIC_SITE_NAME,
+    description: `Order ${order.orderNumber}`,
+    prefill: {
+      name,
+      contact: mobile,
+      email: input.email?.trim() || undefined,
+    },
+  };
+
+  return { order: toAdminOrder(order), payment };
+}
+
+export async function confirmRazorpayPayment(input: {
+  razorpayOrderId: string;
+  razorpayPaymentId: string;
+}) {
+  await ensureDatabase();
+  const order = await ShopOrder.findOne({ where: { razorpayOrderId: input.razorpayOrderId } });
+  if (!order) {
+    throw new NotFoundError("Order not found for this payment.");
+  }
+  return markOrderPaid(order, input.razorpayPaymentId);
 }

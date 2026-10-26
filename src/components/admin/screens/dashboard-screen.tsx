@@ -79,7 +79,7 @@ export function DashboardScreen() {
         <Card>
           <CardHeader className="border-b">
             <CardTitle>Recent orders</CardTitle>
-            <CardDescription>COD and enquiry orders from the storefront.</CardDescription>
+            <CardDescription>Paid online orders from the storefront.</CardDescription>
           </CardHeader>
           <CardContent className="pt-4">
             {orders.length === 0 ? (

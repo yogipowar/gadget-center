@@ -12,6 +12,7 @@ import { routes } from "@/config/routes";
 import { useAdminCatalog } from "@/features/admin/catalog-store";
 import type { AdminOrder } from "@/features/admin/types";
 import { clearCart, useCart } from "@/features/cart/store";
+import type { CheckoutPayment } from "@/features/cart/types";
 import { getProductBySlug } from "@/features/catalog/queries";
 import { apiClient } from "@/lib/api/client";
 import { formatInr } from "@/utils/currency";
@@ -26,6 +27,25 @@ type CheckoutFormState = {
   pincode: string;
 };
 
+type RazorpaySuccessResponse = {
+  razorpay_payment_id: string;
+  razorpay_order_id: string;
+  razorpay_signature: string;
+};
+
+type RazorpayCheckoutInstance = {
+  open: () => void;
+  on: (event: "payment.failed", handler: () => void) => void;
+};
+
+type RazorpayConstructor = new (options: Record<string, unknown>) => RazorpayCheckoutInstance;
+
+declare global {
+  interface Window {
+    Razorpay?: RazorpayConstructor;
+  }
+}
+
 const emptyForm: CheckoutFormState = {
   name: "",
   mobile: "",
@@ -36,11 +56,26 @@ const emptyForm: CheckoutFormState = {
   pincode: "",
 };
 
+function loadRazorpayScript() {
+  if (window.Razorpay) {
+    return Promise.resolve();
+  }
+  return new Promise<void>((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Could not load Razorpay checkout."));
+    document.body.appendChild(script);
+  });
+}
+
 export function CheckoutForm() {
   const router = useRouter();
   const cart = useCart();
   const catalog = useAdminCatalog();
   const [form, setForm] = useState<CheckoutFormState>(emptyForm);
+  const [agreed, setAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const lines = cart.items
@@ -55,30 +90,95 @@ export function CheckoutForm() {
 
   const subtotal = lines.reduce((sum, line) => sum + line.product.salePrice * line.quantity, 0);
 
+  async function confirmPayment(payload: RazorpaySuccessResponse) {
+    const verified = await apiClient.post<AdminOrder>(routes.api.razorpayVerify, payload);
+    if (!verified.success || !verified.data) {
+      throw new Error(verified.message || "Payment could not be confirmed.");
+    }
+    clearCart();
+    toast.success("Payment received. Your order is confirmed.");
+    router.push(`${routes.orderSuccess}?order=${encodeURIComponent(verified.data.orderNumber)}`);
+  }
+
+  function openRazorpay(payment: CheckoutPayment) {
+    return new Promise<void>((resolve, reject) => {
+      if (!window.Razorpay) {
+        reject(new Error("Razorpay checkout is not available."));
+        return;
+      }
+      let settled = false;
+      const checkout = new window.Razorpay({
+        key: payment.keyId,
+        amount: payment.amount,
+        currency: payment.currency,
+        name: payment.name,
+        description: payment.description,
+        order_id: payment.orderId,
+        prefill: payment.prefill,
+        theme: { color: "#111827" },
+        handler: (response: RazorpaySuccessResponse) => {
+          if (settled) {
+            return;
+          }
+          settled = true;
+          confirmPayment(response).then(resolve).catch(reject);
+        },
+        modal: {
+          ondismiss: () => {
+            if (settled) {
+              return;
+            }
+            settled = true;
+            reject(new Error("Payment was cancelled."));
+          },
+        },
+      });
+      checkout.on("payment.failed", () => {
+        if (settled) {
+          return;
+        }
+        settled = true;
+        reject(new Error("Payment failed. Try again."));
+      });
+      checkout.open();
+    });
+  }
+
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (lines.length === 0) {
       toast.error("Your cart is empty.");
       return;
     }
-    setSubmitting(true);
-    const response = await apiClient.post<AdminOrder>(routes.api.orders, {
-      customerName: form.name,
-      mobile: form.mobile,
-      email: form.email || undefined,
-      address: form.address,
-      city: form.city,
-      state: form.state,
-      pincode: form.pincode,
-    });
-    setSubmitting(false);
-    if (!response.success || !response.data) {
-      toast.error(response.message || "Could not place the order.");
+    if (!agreed) {
+      toast.error("Please accept the Terms, Refund and Shipping policies to continue.");
       return;
     }
-    clearCart();
-    toast.success("Order saved. We will call you to confirm.");
-    router.push(`${routes.orderSuccess}?order=${encodeURIComponent(response.data.orderNumber)}`);
+    setSubmitting(true);
+    try {
+      const response = await apiClient.post<{ order: AdminOrder; payment: CheckoutPayment }>(
+        routes.api.orders,
+        {
+          customerName: form.name,
+          mobile: form.mobile,
+          email: form.email || undefined,
+          address: form.address,
+          city: form.city,
+          state: form.state,
+          pincode: form.pincode,
+          items: cart.items,
+        },
+      );
+      if (!response.success || !response.data) {
+        throw new Error(response.message || "Could not start payment.");
+      }
+      await loadRazorpayScript();
+      await openRazorpay(response.data.payment);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not complete payment.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   if (cart.items.length === 0) {
@@ -98,8 +198,8 @@ export function CheckoutForm() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Checkout</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Cash on Delivery. Your order is stored in the shop database and our team will confirm it
-          on the mobile number you share.
+          Pay online with UPI, cards or netbanking. Cash on delivery is not available. The order is
+          confirmed only after payment succeeds.
         </p>
         <form className="mt-6 grid gap-3" onSubmit={onSubmit}>
           <div className="grid gap-1.5">
@@ -181,8 +281,32 @@ export function CheckoutForm() {
               onChange={(event) => setForm((current) => ({ ...current, pincode: event.target.value }))}
             />
           </div>
-          <Button type="submit" className="mt-2 h-10" disabled={submitting}>
-            {submitting ? "Placing order…" : "Place COD order"}
+          <label className="mt-2 flex items-start gap-2 text-sm leading-5 text-muted-foreground">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={agreed}
+              onChange={(event) => setAgreed(event.target.checked)}
+              required
+            />
+            <span>
+              I agree to the{" "}
+              <Link href={routes.terms} className="underline">
+                Terms &amp; Conditions
+              </Link>
+              ,{" "}
+              <Link href={routes.refundPolicy} className="underline">
+                Refund &amp; Cancellation Policy
+              </Link>{" "}
+              and{" "}
+              <Link href={routes.shippingPolicy} className="underline">
+                Shipping Policy
+              </Link>
+              .
+            </span>
+          </label>
+          <Button type="submit" className="mt-2 h-10" disabled={submitting || !agreed}>
+            {submitting ? "Opening payment…" : `Pay ${formatInr(subtotal, { compact: true })}`}
           </Button>
         </form>
       </div>
@@ -203,8 +327,16 @@ export function CheckoutForm() {
           <p className="font-semibold">{formatInr(subtotal, { compact: true })}</p>
         </div>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">
-          Currently available: Cash on Delivery. Razorpay can be connected to this same checkout
-          later.
+          Online payment only via Razorpay (UPI, cards or netbanking). Prices are in INR. Free
+          shipping in India on prepaid orders. See{" "}
+          <Link href={routes.shippingPolicy} className="underline">
+            Shipping
+          </Link>{" "}
+          and{" "}
+          <Link href={routes.refundPolicy} className="underline">
+            Refund &amp; Cancellation
+          </Link>
+          .
         </p>
       </aside>
     </div>

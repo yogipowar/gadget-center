@@ -81,7 +81,7 @@ export default function CartPage() {
         <p className="text-lg font-semibold">{formatInr(subtotal, { compact: true })}</p>
       </div>
       <Link href={routes.checkout}>
-        <Button className="mt-4 h-10 px-5">Checkout</Button>
+        <Button className="mt-4 h-10 px-5">Pay online</Button>
       </Link>
     </div>
   );

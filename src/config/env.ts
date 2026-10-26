@@ -21,6 +21,9 @@ const envSchema = z.object({
   NEXT_PUBLIC_META_PIXEL_ID: z.string().optional().default(""),
   NEXT_PUBLIC_WHATSAPP_NUMBER: z.string().optional().default(""),
   NEXT_PUBLIC_GA_MEASUREMENT_ID: z.string().optional().default(""),
+  RAZORPAY_KEY_ID: z.string().optional().default(""),
+  RAZORPAY_KEY_SECRET: z.string().optional().default(""),
+  RAZORPAY_WEBHOOK_SECRET: z.string().optional().default(""),
 });
 
 function readEnv() {
@@ -38,6 +41,9 @@ function readEnv() {
     NEXT_PUBLIC_META_PIXEL_ID: process.env.NEXT_PUBLIC_META_PIXEL_ID,
     NEXT_PUBLIC_WHATSAPP_NUMBER: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER,
     NEXT_PUBLIC_GA_MEASUREMENT_ID: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID,
+    RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,
+    RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET,
+    RAZORPAY_WEBHOOK_SECRET: process.env.RAZORPAY_WEBHOOK_SECRET,
   });
 
   if (!parsed.success) {

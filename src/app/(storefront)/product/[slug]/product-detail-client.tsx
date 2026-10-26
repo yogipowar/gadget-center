@@ -15,6 +15,7 @@ import {
   getProductBySlug,
   productFacts,
   productGallery,
+  productListingCopy,
   relatedProducts,
   shopCategories,
 } from "@/features/catalog/queries";
@@ -130,6 +131,13 @@ export function ProductDetailClient({
                 <p className="text-sm font-medium text-brand-blue">{discount}% off</p>
               </>
             ) : null}
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Selling price in INR. Free shipping in India on prepaid orders.
+          </p>
+          <div className="mt-4">
+            <h2 className="text-sm font-semibold text-zinc-900">Product description</h2>
+            <p className="mt-2 text-sm leading-6 text-zinc-700">{productListingCopy(product)}</p>
           </div>
 
           <div className="mt-5">

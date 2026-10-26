@@ -2,10 +2,10 @@ import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 import { COOKIE_NAMES } from "@/constants/storage";
-import type { CartState } from "@/features/cart/types";
+import type { CartLine, CartState } from "@/features/cart/types";
 import { handleApiError } from "@/lib/api/error-handler";
 import { success } from "@/lib/api/response";
-import { createOrder } from "@/services/order-service";
+import { createCheckout } from "@/services/order-service";
 
 export const dynamic = "force-dynamic";
 
@@ -31,10 +31,12 @@ export async function POST(request: NextRequest) {
       city?: string;
       state?: string;
       pincode?: string;
+      items?: CartLine[];
     };
     const jar = await cookies();
     const cart = parseCart(jar.get(COOKIE_NAMES.cart)?.value);
-    const order = await createOrder({
+    const items = Array.isArray(body.items) && body.items.length > 0 ? body.items : cart.items;
+    const checkout = await createCheckout({
       customerName: body.customerName ?? "",
       mobile: body.mobile ?? "",
       email: body.email,
@@ -42,15 +44,9 @@ export async function POST(request: NextRequest) {
       city: body.city ?? "",
       state: body.state ?? "",
       pincode: body.pincode ?? "",
-      items: cart.items,
+      items,
     });
-    jar.set(COOKIE_NAMES.cart, JSON.stringify({ items: [] }), {
-      httpOnly: true,
-      sameSite: "lax",
-      path: "/",
-      maxAge: 0,
-    });
-    return NextResponse.json(success(order, "Order saved"), { status: 201 });
+    return NextResponse.json(success(checkout, "Pay to confirm your order"), { status: 201 });
   } catch (error) {
     return handleApiError(error);
   }

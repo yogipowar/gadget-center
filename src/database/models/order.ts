@@ -19,6 +19,8 @@ export class ShopOrder extends Model {
   declare status: string;
   declare paymentStatus: string;
   declare paymentMethod: string;
+  declare razorpayOrderId: string | null;
+  declare razorpayPaymentId: string | null;
   declare notes: string | null;
   declare createdAt: Date;
   declare updatedAt: Date;
@@ -38,8 +40,10 @@ ShopOrder.init(
     itemsSummary: { type: DataTypes.STRING(500), allowNull: false },
     total: { type: DataTypes.INTEGER, allowNull: false },
     status: { type: DataTypes.STRING(32), allowNull: false, defaultValue: "PENDING" },
-    paymentStatus: { type: DataTypes.STRING(32), allowNull: false, defaultValue: "COD_PENDING" },
-    paymentMethod: { type: DataTypes.STRING(24), allowNull: false, defaultValue: "COD" },
+    paymentStatus: { type: DataTypes.STRING(32), allowNull: false, defaultValue: "PENDING" },
+    paymentMethod: { type: DataTypes.STRING(24), allowNull: false, defaultValue: "RAZORPAY" },
+    razorpayOrderId: { type: DataTypes.STRING(64), allowNull: true, unique: true },
+    razorpayPaymentId: { type: DataTypes.STRING(64), allowNull: true },
     notes: { type: DataTypes.TEXT, allowNull: true },
   },
   {

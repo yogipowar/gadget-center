@@ -2,6 +2,7 @@ import { REFURBISHED_GRADE_LABELS } from "@/constants/products";
 import { catalogProducts } from "@/features/catalog/products";
 import type { CatalogProduct, CatalogQuery } from "@/features/catalog/types";
 import { routes } from "@/config/routes";
+import { formatInr } from "@/utils/currency";
 
 export { catalogProducts };
 
@@ -280,6 +281,39 @@ export function productGallery(product: CatalogProduct) {
 
 export function getProductBySlug(slug: string, products: CatalogProduct[] = catalogProducts) {
   return products.find((product) => product.slug === slug) ?? null;
+}
+
+export function productListingCopy(product: CatalogProduct) {
+  const facts = productFacts(product);
+  const typeLabel = product.productType.toLowerCase().replaceAll("_", " ");
+  const condition =
+    product.condition === "REFURBISHED"
+      ? "refurbished"
+      : product.condition === "USED"
+        ? "used"
+        : "new";
+  const specBits = [
+    facts.processor,
+    facts.ram ? `${facts.ram} RAM` : "",
+    facts.storageCapacity
+      ? `${facts.storageCapacity}${facts.storageType ? ` ${facts.storageType}` : ""}`
+      : "",
+    facts.screenSize,
+  ].filter(Boolean);
+  const extras = product.shortDescription.trim();
+  const warranty = facts.warranty
+    ? ` Warranty on this listing: ${facts.warranty}.`
+    : " Confirm warranty with us on the listed phone or email before you pay.";
+  return [
+    `${product.name} is a ${condition} ${product.brand} ${typeLabel} sold by GadgetCenter for ${formatInr(product.salePrice, { compact: true })}.`,
+    specBits.length ? `Key specifications: ${specBits.join(", ")}.` : "",
+    extras,
+    facts.adapterIncluded ? "Power adapter is included." : "",
+    "This is a physical product shipped from Kolhapur, Maharashtra, to addresses in India. Payment is online only (UPI, cards or netbanking).",
+    warranty,
+  ]
+    .filter(Boolean)
+    .join(" ");
 }
 
 export function relatedProducts(

@@ -29,6 +29,7 @@ export const routes = {
   privacyPolicy: "/privacy-policy",
   terms: "/terms",
   refundPolicy: "/refund-policy",
+  shippingPolicy: "/shipping-policy",
   admin: {
     root: "/admin",
     login: "/admin/login",
@@ -55,6 +56,8 @@ export const routes = {
     products: "/api/v1/products",
     orders: "/api/v1/orders",
     cart: "/api/v1/cart",
+    razorpayVerify: "/api/v1/payments/razorpay/verify",
+    razorpayWebhook: "/api/v1/payments/razorpay/webhook",
     adminLogin: "/api/v1/admin/login",
     adminLogout: "/api/v1/admin/logout",
     adminSession: "/api/v1/admin/session",
