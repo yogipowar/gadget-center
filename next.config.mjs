@@ -18,6 +18,9 @@ const nextConfig = {
     NEXT_PUBLIC_BASE_PATH: pagesBasePath,
   },
   serverExternalPackages: ["sequelize", "mysql2"],
+  outputFileTracingIncludes: {
+    "/*": ["./node_modules/mysql2/**/*", "./node_modules/sequelize/**/*"],
+  },
   turbopack: {
     root: path.resolve(__dirname),
   },

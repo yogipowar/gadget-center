@@ -1,6 +1,7 @@
 import "server-only";
 
 import { setDefaultResultOrder } from "node:dns";
+import "mysql2";
 import { Sequelize } from "sequelize";
 
 import { env } from "@/config/env";
