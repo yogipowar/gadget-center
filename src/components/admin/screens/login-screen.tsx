@@ -23,17 +23,20 @@ export function LoginScreen() {
     }
   }, [router]);
 
-  function onSubmit(event: FormEvent) {
+  async function onSubmit(event: FormEvent) {
     event.preventDefault();
     setSubmitting(true);
-    const session = loginStaff(email, password);
-    setSubmitting(false);
-    if (!session) {
-      toast.error("Email or password is not correct.");
-      return;
+    try {
+      const session = await loginStaff(email, password);
+      if (!session) {
+        toast.error("Email or password is not correct.");
+        return;
+      }
+      toast.success(`Signed in as ${session.name}`);
+      router.replace(routes.admin.dashboard);
+    } finally {
+      setSubmitting(false);
     }
-    toast.success(`Signed in as ${session.name}`);
-    router.replace(routes.admin.dashboard);
   }
 
   return (

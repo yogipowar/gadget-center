@@ -41,4 +41,4 @@ export {
 } from "@/constants/inventory";
 export type { InventoryMovementType, RefurbishedUnitStatus } from "@/constants/inventory";
 
-export { COOKIE_NAMES, LOCAL_STORAGE_KEYS } from "@/constants/storage";
+export { COOKIE_NAMES } from "@/constants/storage";

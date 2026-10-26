@@ -55,5 +55,10 @@ export const routes = {
     products: "/api/v1/products",
     orders: "/api/v1/orders",
     cart: "/api/v1/cart",
+    adminLogin: "/api/v1/admin/login",
+    adminLogout: "/api/v1/admin/logout",
+    adminSession: "/api/v1/admin/session",
+    adminProducts: "/api/v1/admin/products",
+    adminOrders: "/api/v1/admin/orders",
   },
 } as const;

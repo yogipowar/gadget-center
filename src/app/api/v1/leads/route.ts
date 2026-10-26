@@ -14,6 +14,7 @@ export async function POST(request: NextRequest) {
       mobile?: string;
       address?: string;
       interestedCategory?: string;
+      requirement?: string;
       email?: string;
       landingPage?: string;
       attribution?: Attribution;
@@ -25,6 +26,7 @@ export async function POST(request: NextRequest) {
         mobile: body.mobile,
         address: body.address,
         interestedCategory: body.interestedCategory,
+        requirement: body.requirement,
         email: body.email,
       },
       attribution: body.attribution,

@@ -11,6 +11,7 @@ import { routes } from "@/config/routes";
 import { siteConfig } from "@/config/site";
 import {
   getServerStaffSession,
+  isStaffSessionPending,
   logoutStaff,
   readStaffSession,
   subscribeStaffSession,
@@ -86,16 +87,21 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     readStaffSession,
     getServerStaffSession,
   );
+  const pending = useSyncExternalStore(
+    subscribeStaffSession,
+    isStaffSessionPending,
+    () => true,
+  );
   const [menuOpen, setMenuOpen] = useState(false);
   const current = normalizePath(pathname);
   const isLogin = current === routes.admin.login;
 
   useEffect(() => {
-    if (isLogin || session) {
+    if (isLogin || pending || session) {
       return;
     }
     router.replace(routes.admin.login);
-  }, [isLogin, router, session]);
+  }, [isLogin, pending, router, session]);
 
   const pageTitle = useMemo(() => {
     for (const group of adminNav) {
@@ -107,8 +113,8 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     return "Admin";
   }, [pathname]);
 
-  function onLogout() {
-    logoutStaff();
+  async function onLogout() {
+    await logoutStaff();
     router.replace(routes.admin.login);
   }
 
@@ -116,7 +122,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
-  if (!session) {
+  if (pending || !session) {
     return (
       <div className="flex min-h-full flex-1 items-center justify-center bg-muted/30 text-sm text-muted-foreground">
         Loading staff console…
@@ -170,12 +176,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
             </Button>
           </div>
         </header>
-        <div className="flex-1 px-4 py-6 lg:px-8">
-          <div className="mb-4 rounded-lg border border-border bg-card px-3 py-2 text-xs text-muted-foreground">
-            Catalog edits stay in this browser until a database is connected.
-          </div>
-          {children}
-        </div>
+        <div className="flex-1 px-4 py-6 lg:px-8">{children}</div>
       </div>
 
       <Sheet open={menuOpen} onOpenChange={setMenuOpen}>

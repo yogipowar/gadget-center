@@ -12,7 +12,10 @@ import {
   LEAD_INTEREST_OPTIONS,
   type LeadInterest,
 } from "@/constants/leads";
-import { LOCAL_STORAGE_KEYS } from "@/constants/storage";
+import { COOKIE_NAMES } from "@/constants/storage";
+import { routes } from "@/config/routes";
+import { apiClient } from "@/lib/api/client";
+import { captureAttributionFromWindow } from "@/lib/tracking/client-attribution";
 import { createLeadSchema } from "@/validators/lead";
 
 type FormState = {
@@ -46,7 +49,7 @@ export function RequirementForm({
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  function onSubmit(event: React.FormEvent<HTMLFormElement>) {
+  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmitting(true);
     setErrors({});
@@ -72,8 +75,19 @@ export function RequirementForm({
       return;
     }
 
-    window.localStorage.setItem(LOCAL_STORAGE_KEYS.leadSubmitted, "1");
-    document.cookie = `${LOCAL_STORAGE_KEYS.leadSubmitted}=1; path=/; max-age=15552000; samesite=lax`;
+    const response = await apiClient.post(routes.api.leads, {
+      ...parsed.data,
+      landingPage: `${window.location.pathname}${window.location.search}`,
+      attribution: captureAttributionFromWindow(),
+    });
+
+    if (!response.success) {
+      toast.error(response.message || "We could not save your details right now.");
+      setSubmitting(false);
+      return;
+    }
+
+    document.cookie = `${COOKIE_NAMES.leadSubmitted}=1; path=/; max-age=15552000; samesite=lax`;
     toast.success("Thanks. Our team will contact you shortly.");
     setForm(emptyForm);
     setSubmitting(false);

@@ -10,6 +10,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<A
 
   const response = await fetch(path, {
     ...rest,
+    credentials: "same-origin",
     headers: {
       "Content-Type": "application/json",
       ...(headers ?? {}),

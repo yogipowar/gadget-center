@@ -4,15 +4,17 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { routes } from "@/config/routes";
+import { useAdminCatalog } from "@/features/admin/catalog-store";
 import { cartCount, removeFromCart, updateCartQuantity, useCart } from "@/features/cart/store";
 import { getProductBySlug } from "@/features/catalog/queries";
 import { formatInr } from "@/utils/currency";
 
 export default function CartPage() {
   const cart = useCart();
+  const catalog = useAdminCatalog();
   const lines = cart.items
     .map((item) => {
-      const product = getProductBySlug(item.slug);
+      const product = getProductBySlug(item.slug, catalog.products);
       if (!product) {
         return null;
       }

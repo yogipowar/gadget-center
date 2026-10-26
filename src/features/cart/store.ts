@@ -2,22 +2,18 @@
 
 import { useSyncExternalStore } from "react";
 
-import { LOCAL_STORAGE_KEYS } from "@/constants/storage";
+import { apiClient } from "@/lib/api/client";
+import { routes } from "@/config/routes";
+import type { CartState } from "@/features/cart/types";
 
-export type CartLine = {
-  slug: string;
-  quantity: number;
-};
-
-type CartState = {
-  items: CartLine[];
-};
+export type { CartLine, CartState } from "@/features/cart/types";
 
 const EMPTY_CART: CartState = { items: [] };
 const listeners = new Set<() => void>();
 
 let memoryCart: CartState = EMPTY_CART;
 let hydrated = false;
+let inflight: Promise<void> | null = null;
 
 function emit() {
   for (const listener of listeners) {
@@ -25,37 +21,37 @@ function emit() {
   }
 }
 
-function parseCart(raw: string | null): CartState {
-  if (!raw) {
-    return EMPTY_CART;
-  }
-  try {
-    const parsed = JSON.parse(raw) as CartState;
-    if (!Array.isArray(parsed.items) || parsed.items.length === 0) {
-      return EMPTY_CART;
-    }
-    return parsed;
-  } catch {
-    return EMPTY_CART;
-  }
-}
-
-function hydrateFromStorage() {
-  if (hydrated || typeof window === "undefined") {
+async function hydrateFromApi() {
+  if (hydrated) {
     return;
   }
+  const response = await apiClient.get<CartState>(routes.api.cart);
+  memoryCart = response.success && response.data ? response.data : EMPTY_CART;
   hydrated = true;
-  memoryCart = parseCart(window.localStorage.getItem(LOCAL_STORAGE_KEYS.cart));
-}
-
-function writeCart(next: CartState) {
-  memoryCart = next.items.length === 0 ? EMPTY_CART : next;
-  window.localStorage.setItem(LOCAL_STORAGE_KEYS.cart, JSON.stringify(memoryCart));
   emit();
 }
 
+function ensureHydrated() {
+  if (!inflight) {
+    inflight = hydrateFromApi().finally(() => {
+      inflight = null;
+    });
+  }
+  return inflight;
+}
+
+async function persistCart(next: CartState) {
+  memoryCart = next.items.length === 0 ? EMPTY_CART : next;
+  emit();
+  const response = await apiClient.put<CartState>(routes.api.cart, memoryCart);
+  if (response.success && response.data) {
+    memoryCart = response.data;
+    emit();
+  }
+}
+
 function getSnapshot() {
-  hydrateFromStorage();
+  void ensureHydrated();
   return memoryCart;
 }
 
@@ -63,29 +59,13 @@ function getServerSnapshot() {
   return EMPTY_CART;
 }
 
-function onStorage(event: StorageEvent) {
-  if (event.key !== LOCAL_STORAGE_KEYS.cart) {
-    return;
-  }
-  memoryCart = parseCart(event.newValue);
-  emit();
-}
-
 function subscribe(listener: () => void) {
   listeners.add(listener);
-  if (listeners.size === 1 && typeof window !== "undefined") {
-    window.addEventListener("storage", onStorage);
-  }
-  return () => {
-    listeners.delete(listener);
-    if (listeners.size === 0 && typeof window !== "undefined") {
-      window.removeEventListener("storage", onStorage);
-    }
-  };
+  void ensureHydrated();
+  return () => listeners.delete(listener);
 }
 
 export function addToCart(slug: string, quantity = 1) {
-  hydrateFromStorage();
   const existing = memoryCart.items.find((item) => item.slug === slug);
   const items = existing
     ? memoryCart.items.map((item) =>
@@ -94,23 +74,25 @@ export function addToCart(slug: string, quantity = 1) {
           : item,
       )
     : [...memoryCart.items, { slug, quantity }];
-  writeCart({ items });
+  void persistCart({ items });
 }
 
 export function updateCartQuantity(slug: string, quantity: number) {
-  hydrateFromStorage();
   const items =
     quantity <= 0
       ? memoryCart.items.filter((item) => item.slug !== slug)
       : memoryCart.items.map((item) =>
           item.slug === slug ? { ...item, quantity: Math.min(quantity, 10) } : item,
         );
-  writeCart({ items });
+  void persistCart({ items });
 }
 
 export function removeFromCart(slug: string) {
-  hydrateFromStorage();
-  writeCart({ items: memoryCart.items.filter((item) => item.slug !== slug) });
+  void persistCart({ items: memoryCart.items.filter((item) => item.slug !== slug) });
+}
+
+export function clearCart() {
+  void persistCart(EMPTY_CART);
 }
 
 export function useCart() {

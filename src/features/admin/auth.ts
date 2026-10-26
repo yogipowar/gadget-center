@@ -1,24 +1,37 @@
-import { LOCAL_STORAGE_KEYS } from "@/constants/storage";
+import { apiClient } from "@/lib/api/client";
+import { routes } from "@/config/routes";
 import type { StaffAccount, StaffSession } from "@/features/admin/types";
 
 const sessionListeners = new Set<() => void>();
-let cachedRaw: string | null | undefined;
 let cachedSession: StaffSession | null = null;
+let pending = true;
+let inflight: Promise<void> | null = null;
 
 function notifyStaffSession() {
   sessionListeners.forEach((listener) => listener());
 }
 
+async function refreshSession() {
+  const response = await apiClient.get<StaffSession | null>(routes.api.adminSession);
+  cachedSession = response.success ? response.data : null;
+  pending = false;
+  notifyStaffSession();
+}
+
+function ensureSession() {
+  if (!inflight) {
+    inflight = refreshSession().finally(() => {
+      inflight = null;
+    });
+  }
+  return inflight;
+}
+
 export function subscribeStaffSession(onStoreChange: () => void) {
   sessionListeners.add(onStoreChange);
-  if (typeof window !== "undefined") {
-    window.addEventListener("storage", onStoreChange);
-  }
+  void ensureSession();
   return () => {
     sessionListeners.delete(onStoreChange);
-    if (typeof window !== "undefined") {
-      window.removeEventListener("storage", onStoreChange);
-    }
   };
 }
 
@@ -31,30 +44,21 @@ export const DEMO_STAFF: StaffAccount[] = [
   },
 ];
 
-export function loginStaff(email: string, password: string): StaffSession | null {
-  const account = DEMO_STAFF.find(
-    (item) => item.email.toLowerCase() === email.trim().toLowerCase() && item.password === password,
-  );
-  if (!account) {
+export async function loginStaff(email: string, password: string): Promise<StaffSession | null> {
+  const response = await apiClient.post<StaffSession>(routes.api.adminLogin, { email, password });
+  if (!response.success || !response.data) {
     return null;
   }
-  const session: StaffSession = {
-    email: account.email,
-    name: account.name,
-    role: account.role,
-  };
-  const raw = JSON.stringify(session);
-  window.localStorage.setItem(LOCAL_STORAGE_KEYS.staffSession, raw);
-  cachedRaw = raw;
-  cachedSession = session;
+  cachedSession = response.data;
+  pending = false;
   notifyStaffSession();
-  return session;
+  return cachedSession;
 }
 
-export function logoutStaff() {
-  window.localStorage.removeItem(LOCAL_STORAGE_KEYS.staffSession);
-  cachedRaw = null;
+export async function logoutStaff() {
+  await apiClient.post(routes.api.adminLogout);
   cachedSession = null;
+  pending = false;
   notifyStaffSession();
 }
 
@@ -62,29 +66,10 @@ export function getServerStaffSession(): StaffSession | null {
   return null;
 }
 
+export function isStaffSessionPending() {
+  return pending;
+}
+
 export function readStaffSession(): StaffSession | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
-  const raw = window.localStorage.getItem(LOCAL_STORAGE_KEYS.staffSession);
-  if (raw === cachedRaw) {
-    return cachedSession;
-  }
-  cachedRaw = raw;
-  if (!raw) {
-    cachedSession = null;
-    return cachedSession;
-  }
-  try {
-    const parsed = JSON.parse(raw) as StaffSession;
-    if (!parsed.email || !parsed.name || parsed.role !== "SUPER_ADMIN") {
-      cachedSession = null;
-      return cachedSession;
-    }
-    cachedSession = parsed;
-    return cachedSession;
-  } catch {
-    cachedSession = null;
-    return cachedSession;
-  }
+  return cachedSession;
 }

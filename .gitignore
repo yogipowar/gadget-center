@@ -35,6 +35,9 @@ yarn-error.log*
 .env.*
 !.env.example
 
+# local database dumps
+scripts/gadgetcenter-mysql.sql
+
 # vercel
 .vercel
 

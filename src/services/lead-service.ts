@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 
 import { LEAD_NUMBER_PREFIX } from "@/constants/leads";
 import { Lead } from "@/database/models/lead";
+import { ensureDatabase } from "@/database/sequelize";
 import { AppError, ValidationError } from "@/lib/api/errors";
 import { logger } from "@/lib/logger";
 import { resolveLeadSource, type Attribution } from "@/lib/tracking/utm";
@@ -32,7 +33,7 @@ export async function createLead(input: {
   const leadNumber = `${LEAD_NUMBER_PREFIX}${Date.now().toString().slice(-8)}`;
 
   try {
-    await Lead.sync();
+    await ensureDatabase();
     const lead = await Lead.create({
       id: randomUUID(),
       leadNumber,
@@ -54,6 +55,7 @@ export async function createLead(input: {
       utmContent: attribution?.utmContent,
       utmTerm: attribution?.utmTerm,
       userAgent: input.userAgent?.slice(0, 255) ?? null,
+      requirement: parsed.data.requirement || null,
       status: "NEW",
       priority: source === "META" ? "HOT" : "WARM",
     } as never);

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { env } from "@/config/env";
-import { pingDatabase } from "@/database/sequelize";
+import { ensureDatabase } from "@/database/sequelize";
 import { handleApiError } from "@/lib/api/error-handler";
 import { success } from "@/lib/api/response";
 
@@ -12,7 +12,7 @@ export async function GET() {
     let database: "connected" | "disconnected" = "disconnected";
 
     try {
-      await pingDatabase();
+      await ensureDatabase();
       database = "connected";
     } catch {
       database = "disconnected";

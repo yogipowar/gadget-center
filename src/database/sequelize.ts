@@ -1,9 +1,12 @@
 import "server-only";
 
+import { setDefaultResultOrder } from "node:dns";
 import { Sequelize } from "sequelize";
 
 import { env } from "@/config/env";
 import { logger } from "@/lib/logger";
+
+setDefaultResultOrder("ipv4first");
 
 function createSequelize() {
   if (env.DATABASE_URL) {
@@ -11,7 +14,8 @@ function createSequelize() {
       dialect: "mysql",
       logging: env.NODE_ENV === "development" ? (sql) => logger.info(sql) : false,
       dialectOptions: {
-        connectTimeout: 3000,
+        connectTimeout: 15_000,
+        ...(process.env.DB_SSL === "true" ? { ssl: { rejectUnauthorized: false } } : {}),
       },
       define: {
         underscored: true,
@@ -38,7 +42,8 @@ function createSequelize() {
     logging: env.NODE_ENV === "development" ? (sql) => logger.info(sql) : false,
     dialectOptions: {
       charset: "utf8mb4",
-      connectTimeout: 3000,
+      connectTimeout: 15_000,
+      ...(process.env.DB_SSL === "true" ? { ssl: { rejectUnauthorized: false } } : {}),
     },
     define: {
       underscored: true,
@@ -65,11 +70,29 @@ if (env.NODE_ENV !== "production") {
   globalForSequelize.sequelize = sequelize;
 }
 
-export async function pingDatabase(timeoutMs = 2500) {
+export async function pingDatabase(timeoutMs = 8000) {
   await Promise.race([
     sequelize.authenticate(),
     new Promise<never>((_, reject) => {
       setTimeout(() => reject(new Error("Database connection timed out")), timeoutMs);
     }),
   ]);
+}
+
+let ready: Promise<void> | null = null;
+
+export function ensureDatabase() {
+  if (!ready) {
+    ready = (async () => {
+      await import("@/database/models");
+      const { seedDatabase } = await import("@/database/seed");
+      await pingDatabase();
+      await sequelize.sync();
+      await seedDatabase();
+    })().catch((error) => {
+      ready = null;
+      throw error;
+    });
+  }
+  return ready;
 }

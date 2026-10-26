@@ -90,6 +90,7 @@ function toForm(product: CatalogProduct, onHand: number): ProductForm {
 export function ProductsScreen() {
   const catalog = useAdminCatalog();
   const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [form, setForm] = useState<ProductForm>(emptyForm);
@@ -114,7 +115,7 @@ export function ProductsScreen() {
     setOpen(true);
   }
 
-  function onSave() {
+  async function onSave() {
     const name = form.name.trim();
     const sku = form.sku.trim();
     const brand = form.brand.trim();
@@ -137,50 +138,61 @@ export function ProductsScreen() {
       return;
     }
     const current = editingId ? catalog.products.find((item) => item.id === editingId) : undefined;
-    saveProduct({
-      id: editingId || createRecordId("p"),
-      sku,
-      slug,
-      name,
-      brand,
-      categorySlug,
-      productType: form.productType,
-      condition: form.condition,
-      grade: form.condition === "REFURBISHED" && form.grade ? form.grade : undefined,
-      price,
-      salePrice: Number.isFinite(salePrice) && salePrice > 0 ? salePrice : price,
-      warranty: form.warranty.trim(),
-      specs: form.specs.split(",").map((item) => item.trim()).filter(Boolean),
-      shortDescription: form.shortDescription.trim() || name,
-      featured: form.featured,
-      bestseller: form.bestseller,
-      newArrival: form.newArrival,
-      inStock: onHand > 0,
-      accent: current?.accent ?? "navy",
-      image: current?.image,
-      images: current?.images,
-      onHand: Number.isFinite(onHand) ? Math.max(0, onHand) : 0,
-    });
-    toast.success(editingId ? "Product updated." : "Product added. It will show in the store catalog.");
-    setOpen(false);
+    setSaving(true);
+    try {
+      await saveProduct({
+        id: editingId || createRecordId("p"),
+        sku,
+        slug,
+        name,
+        brand,
+        categorySlug,
+        productType: form.productType,
+        condition: form.condition,
+        grade: form.condition === "REFURBISHED" && form.grade ? form.grade : undefined,
+        price,
+        salePrice: Number.isFinite(salePrice) && salePrice > 0 ? salePrice : price,
+        warranty: form.warranty.trim(),
+        specs: form.specs.split(",").map((item) => item.trim()).filter(Boolean),
+        shortDescription: form.shortDescription.trim() || name,
+        featured: form.featured,
+        bestseller: form.bestseller,
+        newArrival: form.newArrival,
+        inStock: onHand > 0,
+        accent: current?.accent ?? "navy",
+        image: current?.image,
+        images: current?.images,
+        onHand: Number.isFinite(onHand) ? Math.max(0, onHand) : 0,
+      });
+      toast.success(editingId ? "Product updated." : "Product added. It will show in the store catalog.");
+      setOpen(false);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not save the product.");
+    } finally {
+      setSaving(false);
+    }
   }
 
-  function onBulkDelete() {
+  async function onBulkDelete() {
     if (selectedIds.length === 0) {
       return;
     }
     if (!window.confirm(`Delete ${selectedIds.length} selected product${selectedIds.length === 1 ? "" : "s"}?`)) {
       return;
     }
-    deleteProducts(selectedIds);
-    setSelectedIds([]);
-    toast.success("Selected products deleted.");
+    try {
+      await deleteProducts(selectedIds);
+      setSelectedIds([]);
+      toast.success("Selected products deleted.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not delete products.");
+    }
   }
 
   return (
     <AdminPage
       title="Products"
-      description="Add, edit or delete SKUs. Select rows to delete more than one. Saved on this device until a database is connected."
+      description="Add, edit or delete SKUs. Changes are saved to the shop database and show on the storefront."
       actions={
         <div className="flex flex-wrap gap-2">
           {selectedIds.length > 0 ? (
@@ -236,10 +248,15 @@ export function ProductsScreen() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => {
-                    if (window.confirm(`Delete ${row.name}?`)) {
-                      deleteProduct(row.id);
+                  onClick={async () => {
+                    if (!window.confirm(`Delete ${row.name}?`)) {
+                      return;
+                    }
+                    try {
+                      await deleteProduct(row.id);
                       toast.success("Product deleted.");
+                    } catch (error) {
+                      toast.error(error instanceof Error ? error.message : "Could not delete the product.");
                     }
                   }}
                 >
@@ -256,6 +273,7 @@ export function ProductsScreen() {
         title={editingId ? "Edit product" : "Add product"}
         description="Prices are in INR. Specs can be a comma-separated list."
         onSubmit={onSave}
+        submitLabel={saving ? "Saving…" : "Save"}
       >
         <AdminField label="Name">
           <Input

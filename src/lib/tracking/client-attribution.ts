@@ -1,15 +1,28 @@
-import { LOCAL_STORAGE_KEYS } from "@/constants/storage";
+import { COOKIE_NAMES } from "@/constants/storage";
 import {
   mergeAttribution,
   parseAttribution,
   type Attribution,
 } from "@/lib/tracking/utm";
 
-function readStored(): Attribution | null {
-  if (typeof window === "undefined") {
+function readCookie(name: string) {
+  if (typeof document === "undefined") {
     return null;
   }
-  const raw = window.localStorage.getItem(LOCAL_STORAGE_KEYS.attribution);
+  const prefix = `${name}=`;
+  const match = document.cookie.split("; ").find((part) => part.startsWith(prefix));
+  if (!match) {
+    return null;
+  }
+  return decodeURIComponent(match.slice(prefix.length));
+}
+
+function writeCookie(name: string, value: string, maxAge = 15_552_000) {
+  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; samesite=lax`;
+}
+
+function readStored(): Attribution | null {
+  const raw = readCookie(COOKIE_NAMES.attribution);
   if (!raw) {
     return null;
   }
@@ -27,6 +40,6 @@ export function captureAttributionFromWindow(): Attribution {
     referrer: document.referrer || null,
   });
   const merged = mergeAttribution(readStored(), incoming);
-  window.localStorage.setItem(LOCAL_STORAGE_KEYS.attribution, JSON.stringify(merged));
+  writeCookie(COOKIE_NAMES.attribution, JSON.stringify(merged));
   return merged;
 }

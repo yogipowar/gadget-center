@@ -8,13 +8,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { buttonVariants } from "@/components/ui/button";
 import { routes } from "@/config/routes";
 import { useAdminCatalog } from "@/features/admin/catalog-store";
-import { adminOrders } from "@/features/admin/fixtures";
+import { useAdminOrders } from "@/features/admin/orders-client";
 import { ORDER_STATUS_LABELS, formatAdminDate } from "@/features/admin/labels";
 import { formatInr } from "@/utils/currency";
 import { cn } from "@/lib/utils";
 
 export function DashboardScreen() {
   const catalog = useAdminCatalog();
+  const { orders } = useAdminOrders();
   const products = catalog.products;
   const units = products.reduce((sum, product) => sum + (product.onHand ?? 0), 0);
   const outOfStock = products.filter((product) => !product.inStock || (product.onHand ?? 0) <= 0);
@@ -22,7 +23,7 @@ export function DashboardScreen() {
     const onHand = product.onHand ?? 0;
     return product.inStock && onHand > 0 && onHand <= 5;
   });
-  const liveOrders = adminOrders.filter((order) => order.status !== "CANCELLED");
+  const liveOrders = orders.filter((order) => order.status !== "CANCELLED");
   const orderValue = liveOrders.reduce((sum, order) => sum + order.total, 0);
   const stats = [
     { label: "Products", value: String(products.length), href: routes.admin.products },
@@ -81,19 +82,23 @@ export function DashboardScreen() {
             <CardDescription>COD and enquiry orders from the storefront.</CardDescription>
           </CardHeader>
           <CardContent className="pt-4">
-            <ul className="space-y-3">
-              {adminOrders.slice(0, 6).map((order) => (
-                <li key={order.id} className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-medium">{order.orderNumber}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {order.customer} · {formatInr(order.total, { compact: true })} · {formatAdminDate(order.createdAt)}
-                    </p>
-                  </div>
-                  <StatusBadge value={order.status} label={ORDER_STATUS_LABELS[order.status]} />
-                </li>
-              ))}
-            </ul>
+            {orders.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No storefront orders yet.</p>
+            ) : (
+              <ul className="space-y-3">
+                {orders.slice(0, 6).map((order) => (
+                  <li key={order.id} className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-medium">{order.orderNumber}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {order.customer} · {formatInr(order.total, { compact: true })} · {formatAdminDate(order.createdAt)}
+                      </p>
+                    </div>
+                    <StatusBadge value={order.status} label={ORDER_STATUS_LABELS[order.status]} />
+                  </li>
+                ))}
+              </ul>
+            )}
             <Link href={routes.admin.orders} className={cn(buttonVariants({ variant: "outline" }), "mt-4")}>
               Open orders
             </Link>

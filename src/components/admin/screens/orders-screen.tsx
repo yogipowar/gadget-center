@@ -3,7 +3,7 @@
 import { AdminPage } from "@/components/admin/admin-page";
 import { AdminTable } from "@/components/admin/admin-table";
 import { StatusBadge } from "@/components/admin/status-badge";
-import { adminOrders } from "@/features/admin/fixtures";
+import { useAdminOrders } from "@/features/admin/orders-client";
 import {
   ORDER_STATUS_LABELS,
   PAYMENT_METHOD_LABELS,
@@ -14,13 +14,15 @@ import type { AdminOrder } from "@/features/admin/types";
 import { formatInr } from "@/utils/currency";
 
 export function OrdersScreen() {
+  const { orders, loaded } = useAdminOrders();
+
   return (
-    <AdminPage title="Orders" description="COD and enquiry orders. Online payment can attach to this same list later.">
+    <AdminPage title="Orders" description="COD orders placed from the storefront checkout.">
       <AdminTable
-        rows={adminOrders}
+        rows={orders}
         searchPlaceholder="Search order number, customer or mobile"
         searchText={(row) => `${row.orderNumber} ${row.customer} ${row.mobile} ${row.items}`}
-        empty="No orders match this search."
+        empty={loaded ? "No orders yet." : "Loading orders…"}
         columns={[
           { header: "Order", cell: (row: AdminOrder) => row.orderNumber },
           { header: "Customer", cell: (row: AdminOrder) => row.customer },

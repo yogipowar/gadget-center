@@ -18,6 +18,7 @@ import {
   relatedProducts,
   shopCategories,
 } from "@/features/catalog/queries";
+import type { CatalogProduct } from "@/features/catalog/types";
 import { formatInr, discountPercent } from "@/utils/currency";
 
 function telHref(phone: string) {
@@ -54,16 +55,24 @@ function InfoCell({ label, value }: { label: string; value: string }) {
   );
 }
 
-export function ProductDetailClient({ slug }: { slug: string }) {
+export function ProductDetailClient({
+  slug,
+  initialProduct,
+}: {
+  slug: string;
+  initialProduct?: CatalogProduct;
+}) {
   const catalog = useAdminCatalog();
-  const product = getProductBySlug(slug, catalog.products);
+  const product = getProductBySlug(slug, catalog.products) ?? initialProduct;
 
   if (!product) {
     return (
       <div className="mx-auto w-full max-w-6xl px-4 py-16 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight">Product not found</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {catalog.loaded ? "Product not found" : "Loading product…"}
+        </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          This listing is not in the catalog saved on this device.
+          {catalog.loaded ? "This listing is not in the catalog." : "Fetching the latest catalog."}
         </p>
       </div>
     );

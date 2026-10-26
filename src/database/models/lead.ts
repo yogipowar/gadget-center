@@ -17,6 +17,7 @@ export class Lead extends Model {
   declare adSet: string | null;
   declare ad: string | null;
   declare landingPage: string | null;
+  declare requirement: string | null;
   declare status: string;
   declare priority: string;
 }
@@ -43,6 +44,7 @@ Lead.init(
     utmContent: { type: DataTypes.STRING(160), allowNull: true },
     utmTerm: { type: DataTypes.STRING(160), allowNull: true },
     userAgent: { type: DataTypes.STRING(255), allowNull: true },
+    requirement: { type: DataTypes.TEXT, allowNull: true },
     status: { type: DataTypes.STRING(32), allowNull: false, defaultValue: "NEW" },
     priority: { type: DataTypes.STRING(16), allowNull: false, defaultValue: "WARM" },
   },

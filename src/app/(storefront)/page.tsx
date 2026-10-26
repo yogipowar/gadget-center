@@ -14,6 +14,7 @@ import {
   queryCatalog,
   shopCategories,
 } from "@/features/catalog/queries";
+import { loadCatalog } from "@/lib/catalog-server";
 
 function SectionHeading({
   title,
@@ -36,13 +37,16 @@ function SectionHeading({
   );
 }
 
-export default function HomePage() {
-  const featured = pickDiverseCatalog(queryCatalog({ featured: true }), 8);
-  const arrivals = pickDiverseCatalog(queryCatalog({ newArrival: true }), 8);
-  const refurbished = pickDiverseCatalog(queryCatalog({ refurbished: true }), 8);
-  const bestLaptops = queryCatalog({ productType: "LAPTOP", bestseller: true }).slice(0, 4);
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const products = await loadCatalog();
+  const featured = pickDiverseCatalog(queryCatalog({ featured: true }, products), 8);
+  const arrivals = pickDiverseCatalog(queryCatalog({ newArrival: true }, products), 8);
+  const refurbished = pickDiverseCatalog(queryCatalog({ refurbished: true }, products), 8);
+  const bestLaptops = queryCatalog({ productType: "LAPTOP", bestseller: true }, products).slice(0, 4);
   const liveCategories = shopCategories.filter(
-    (category) => queryCatalog({ categorySlug: category.slug }).length > 0,
+    (category) => queryCatalog({ categorySlug: category.slug }, products).length > 0,
   );
 
   return (
