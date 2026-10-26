@@ -9,12 +9,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { routes } from "@/config/routes";
 import { siteConfig } from "@/config/site";
-import { DEMO_STAFF, loginStaff, readStaffSession } from "@/features/admin/auth";
+import { loginStaff, readStaffSession } from "@/features/admin/auth";
 
 export function LoginScreen() {
   const router = useRouter();
-  const [email, setEmail] = useState(DEMO_STAFF[0].email);
-  const [password, setPassword] = useState(DEMO_STAFF[0].password);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -72,9 +72,6 @@ export function LoginScreen() {
             {submitting ? "Signing in…" : "Sign in"}
           </Button>
         </form>
-        <p className="mt-6 rounded-lg bg-muted/60 p-3 text-xs leading-5 text-muted-foreground">
-          Super Admin: {DEMO_STAFF[0].email} / {DEMO_STAFF[0].password}
-        </p>
       </div>
     </main>
   );

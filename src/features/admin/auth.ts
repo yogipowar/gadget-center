@@ -1,6 +1,6 @@
 import { apiClient } from "@/lib/api/client";
 import { routes } from "@/config/routes";
-import type { StaffAccount, StaffSession } from "@/features/admin/types";
+import type { StaffSession } from "@/features/admin/types";
 
 const sessionListeners = new Set<() => void>();
 let cachedSession: StaffSession | null = null;
@@ -34,15 +34,6 @@ export function subscribeStaffSession(onStoreChange: () => void) {
     sessionListeners.delete(onStoreChange);
   };
 }
-
-export const DEMO_STAFF: StaffAccount[] = [
-  {
-    email: "admin@gadgetcenter.local",
-    password: "admin123",
-    name: "Yogesh Powar",
-    role: "SUPER_ADMIN",
-  },
-];
 
 export async function loginStaff(email: string, password: string): Promise<StaffSession | null> {
   const response = await apiClient.post<StaffSession>(routes.api.adminLogin, { email, password });
