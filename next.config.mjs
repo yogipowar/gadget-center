@@ -1,6 +1,7 @@
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
-import type { NextConfig } from "next";
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const githubPages = process.env.GITHUB_PAGES === "true";
 const rawBasePath = process.env.PAGES_BASE_PATH || process.env.NEXT_PUBLIC_BASE_PATH || "";
@@ -10,7 +11,8 @@ const pagesBasePath = githubPages
     : "/gadget-center"
   : "";
 
-const nextConfig: NextConfig = {
+/** @type {import("next").NextConfig} */
+const nextConfig = {
   poweredByHeader: false,
   env: {
     NEXT_PUBLIC_BASE_PATH: pagesBasePath,
@@ -26,7 +28,7 @@ const nextConfig: NextConfig = {
   },
   ...(githubPages
     ? {
-        output: "export" as const,
+        output: "export",
         trailingSlash: true,
         basePath: pagesBasePath,
       }
