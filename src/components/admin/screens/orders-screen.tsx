@@ -1,8 +1,11 @@
 "use client";
 
+import { toast } from "sonner";
+
 import { AdminPage } from "@/components/admin/admin-page";
 import { AdminTable } from "@/components/admin/admin-table";
 import { StatusBadge } from "@/components/admin/status-badge";
+import { Button } from "@/components/ui/button";
 import { useAdminOrders } from "@/features/admin/orders-client";
 import {
   ORDER_STATUS_LABELS,
@@ -14,10 +17,19 @@ import type { AdminOrder } from "@/features/admin/types";
 import { formatInr } from "@/utils/currency";
 
 export function OrdersScreen() {
-  const { orders, loaded } = useAdminOrders();
+  const { orders, loaded, markPaid } = useAdminOrders();
+
+  async function onMarkPaid(order: AdminOrder) {
+    try {
+      await markPaid(order.id);
+      toast.success(`${order.orderNumber} marked as paid.`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not update the order.");
+    }
+  }
 
   return (
-    <AdminPage title="Orders" description="Online payments from the storefront checkout.">
+    <AdminPage title="Orders" description="UPI and bank-transfer orders from the storefront. Mark paid after you see the credit.">
       <AdminTable
         rows={orders}
         searchPlaceholder="Search order number, customer or mobile"
@@ -42,6 +54,15 @@ export function OrdersScreen() {
           },
           { header: "Method", cell: (row: AdminOrder) => PAYMENT_METHOD_LABELS[row.paymentMethod] },
           { header: "Date", cell: (row: AdminOrder) => formatAdminDate(row.createdAt) },
+          {
+            header: "",
+            cell: (row: AdminOrder) =>
+              row.paymentStatus === "PENDING" ? (
+                <Button type="button" size="sm" variant="outline" onClick={() => void onMarkPaid(row)}>
+                  Mark paid
+                </Button>
+              ) : null,
+          },
         ]}
       />
     </AdminPage>

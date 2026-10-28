@@ -41,7 +41,7 @@ ShopOrder.init(
     total: { type: DataTypes.INTEGER, allowNull: false },
     status: { type: DataTypes.STRING(32), allowNull: false, defaultValue: "PENDING" },
     paymentStatus: { type: DataTypes.STRING(32), allowNull: false, defaultValue: "PENDING" },
-    paymentMethod: { type: DataTypes.STRING(24), allowNull: false, defaultValue: "RAZORPAY" },
+    paymentMethod: { type: DataTypes.STRING(24), allowNull: false, defaultValue: "UPI" },
     razorpayOrderId: { type: DataTypes.STRING(64), allowNull: true, unique: true },
     razorpayPaymentId: { type: DataTypes.STRING(64), allowNull: true },
     notes: { type: DataTypes.TEXT, allowNull: true },

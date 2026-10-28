@@ -1,6 +1,7 @@
 import "server-only";
 
 import { setDefaultResultOrder } from "node:dns";
+import { lookup } from "node:dns/promises";
 import "mysql2";
 import { Sequelize } from "sequelize";
 
@@ -71,7 +72,24 @@ if (env.NODE_ENV !== "production") {
   globalForSequelize.sequelize = sequelize;
 }
 
+async function preferIpv4Host() {
+  if (env.DATABASE_URL) {
+    return;
+  }
+  const host = env.DB_HOST;
+  if (!host || host === "127.0.0.1" || /^\d{1,3}(?:\.\d{1,3}){3}$/.test(host)) {
+    return;
+  }
+  const resolved = host === "localhost" ? "127.0.0.1" : (await lookup(host, { family: 4 })).address;
+  sequelize.config.host = resolved;
+  const manager = sequelize.connectionManager as { config?: { host?: string } };
+  if (manager.config) {
+    manager.config.host = resolved;
+  }
+}
+
 export async function pingDatabase(timeoutMs = 8000) {
+  await preferIpv4Host();
   await Promise.race([
     sequelize.authenticate(),
     new Promise<never>((_, reject) => {

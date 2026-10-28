@@ -53,9 +53,8 @@ export default function RefundPage() {
       </ul>
       <h2>How refunds are paid</h2>
       <p>
-        Approved refunds are issued to the original Razorpay payment method (the same UPI, card or netbanking
-        account). Bank or UPI credit usually appears in 5–7 working days after we approve the refund. We do not
-        offer cash refunds.
+        Approved refunds are sent back to the same UPI ID or bank account you paid from. Credit usually appears
+        in 5–7 working days after we approve the refund. We do not offer cash refunds.
       </p>
       <h2>Warranty after delivery</h2>
       <p>

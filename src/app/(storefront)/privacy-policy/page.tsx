@@ -22,7 +22,7 @@ export default function PrivacyPage() {
       <h2>Information we collect</h2>
       <ul>
         <li>Name, mobile number, email, delivery address, city, state and pincode when you enquire or place an order.</li>
-        <li>Order items, amount paid, and payment status. Card or UPI credentials are collected by Razorpay, not stored on our servers.</li>
+        <li>Order items, amount and payment status. UPI PIN and bank login are never entered on this website.</li>
         <li>WhatsApp or phone messages you send us about a product or repair.</li>
         <li>Basic device and browser information, and advertising click parameters if you arrive from an ad.</li>
       </ul>
@@ -34,8 +34,8 @@ export default function PrivacyPage() {
       </ul>
       <h2>Sharing</h2>
       <p>
-        We share only what is required with payment processors (Razorpay), courier partners, and our hosting
-        provider. We do not sell personal data. We may disclose information if Indian law requires it.
+        We share only what is required with courier partners and our hosting provider. We do not sell personal
+        data. We may disclose information if Indian law requires it.
       </p>
       <h2>Retention and security</h2>
       <p>

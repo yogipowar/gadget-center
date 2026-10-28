@@ -29,10 +29,10 @@ export default function TermsPage() {
       </p>
       <h2>Orders and payment</h2>
       <p>
-        Orders are accepted only after successful online payment (UPI, debit/credit card or netbanking) through
-        Razorpay. Cash on delivery is not offered. An order is confirmed when payment is captured. We may cancel
-        an order if stock is unavailable, the address cannot be served, or payment is reversed; in that case the
-        paid amount is refunded as described in the{" "}
+        Pay by UPI (up to ₹1,00,000) or bank transfer (IMPS/NEFT) to the account shown at checkout. Cash on
+        delivery is not offered. An order is confirmed after we see the payment in that account. We may cancel
+        an order if stock is unavailable, the address cannot be served, or payment does not arrive; in that case any
+        amount received is refunded as described in the{" "}
         <Link href={routes.refundPolicy} className="font-medium text-foreground underline">
           Refund &amp; Cancellation Policy
         </Link>

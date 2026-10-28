@@ -15,6 +15,11 @@ export const publicEnv = {
   address:
     process.env.NEXT_PUBLIC_BUSINESS_ADDRESS ??
     "Jyotirling Colony, Bondre Nagar, Phulewadi, Kolhapur, Maharashtra 416010",
+  upiId: process.env.NEXT_PUBLIC_UPI_ID ?? "powaryogesh20-1@oksbi",
+  bankAccountName: process.env.NEXT_PUBLIC_BANK_ACCOUNT_NAME ?? "Yogesh Sambhaji Powar",
+  bankName: process.env.NEXT_PUBLIC_BANK_NAME ?? "Bank of Maharashtra",
+  bankAccountNumber: process.env.NEXT_PUBLIC_BANK_ACCOUNT_NUMBER ?? "60239477076",
+  bankIfsc: process.env.NEXT_PUBLIC_BANK_IFSC ?? "MAHB0000497",
 } as const;
 
 export type PublicEnv = typeof publicEnv;

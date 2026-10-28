@@ -23,7 +23,7 @@ export const PAYMENT_STATUSES = [
 
 export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 
-export const PAYMENT_METHODS = ["COD", "ENQUIRY", "RAZORPAY"] as const;
+export const PAYMENT_METHODS = ["COD", "ENQUIRY", "RAZORPAY", "UPI", "BANK"] as const;
 
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 

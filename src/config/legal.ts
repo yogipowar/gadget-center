@@ -4,5 +4,5 @@ export const legal = {
   closed: "Sunday closed",
   shipsFrom: "Kolhapur, Maharashtra, India",
   deliveryArea: "India",
-  lastUpdated: "26 October 2026",
+  lastUpdated: "28 October 2026",
 } as const;

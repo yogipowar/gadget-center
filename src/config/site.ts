@@ -15,6 +15,13 @@ export const siteConfig = {
     email: publicEnv.contactEmail,
     address: publicEnv.address,
   },
+  payment: {
+    upiId: publicEnv.upiId,
+    accountName: publicEnv.bankAccountName,
+    bankName: publicEnv.bankName,
+    accountNumber: publicEnv.bankAccountNumber,
+    ifsc: publicEnv.bankIfsc,
+  },
 } as const;
 
 export type SiteConfig = typeof siteConfig;

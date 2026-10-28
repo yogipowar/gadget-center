@@ -46,7 +46,9 @@ export async function POST(request: NextRequest) {
       pincode: body.pincode ?? "",
       items,
     });
-    return NextResponse.json(success(checkout, "Pay to confirm your order"), { status: 201 });
+    return NextResponse.json(success(checkout, "Pay by UPI or bank transfer to confirm your order"), {
+      status: 201,
+    });
   } catch (error) {
     return handleApiError(error);
   }

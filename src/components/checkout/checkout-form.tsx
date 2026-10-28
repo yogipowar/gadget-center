@@ -15,6 +15,8 @@ import { clearCart, useCart } from "@/features/cart/store";
 import type { CheckoutPayment } from "@/features/cart/types";
 import { getProductBySlug } from "@/features/catalog/queries";
 import { apiClient } from "@/lib/api/client";
+import { qrImageUrl, UPI_LIMIT_RUPEES } from "@/lib/upi";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { formatInr } from "@/utils/currency";
 
 type CheckoutFormState = {
@@ -27,25 +29,6 @@ type CheckoutFormState = {
   pincode: string;
 };
 
-type RazorpaySuccessResponse = {
-  razorpay_payment_id: string;
-  razorpay_order_id: string;
-  razorpay_signature: string;
-};
-
-type RazorpayCheckoutInstance = {
-  open: () => void;
-  on: (event: "payment.failed", handler: () => void) => void;
-};
-
-type RazorpayConstructor = new (options: Record<string, unknown>) => RazorpayCheckoutInstance;
-
-declare global {
-  interface Window {
-    Razorpay?: RazorpayConstructor;
-  }
-}
-
 const emptyForm: CheckoutFormState = {
   name: "",
   mobile: "",
@@ -56,18 +39,132 @@ const emptyForm: CheckoutFormState = {
   pincode: "",
 };
 
-function loadRazorpayScript() {
-  if (window.Razorpay) {
-    return Promise.resolve();
-  }
-  return new Promise<void>((resolve, reject) => {
-    const script = document.createElement("script");
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.async = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error("Could not load Razorpay checkout."));
-    document.body.appendChild(script);
-  });
+async function copyText(value: string, label: string) {
+  await navigator.clipboard.writeText(value);
+  toast.success(`${label} copied`);
+}
+
+function BankDetails({ payment }: { payment: CheckoutPayment }) {
+  const lines = [
+    `Name: ${payment.bank.accountName}`,
+    `Bank: ${payment.bank.bankName}`,
+    `Account: ${payment.bank.accountNumber}`,
+    `IFSC: ${payment.bank.ifsc}`,
+    `Amount: ${formatInr(payment.amount, { compact: true })}`,
+    `Remark: ${payment.orderNumber}`,
+  ].join("\n");
+
+  return (
+    <div className="rounded-xl border border-border p-4 text-sm">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="font-semibold">Bank transfer (IMPS / NEFT)</h2>
+        <Button type="button" variant="outline" size="sm" onClick={() => void copyText(lines, "Bank details")}>
+          Copy
+        </Button>
+      </div>
+      <dl className="mt-3 space-y-1.5">
+        <div className="flex justify-between gap-3">
+          <dt className="text-muted-foreground">Name</dt>
+          <dd className="font-medium">{payment.bank.accountName}</dd>
+        </div>
+        <div className="flex justify-between gap-3">
+          <dt className="text-muted-foreground">Bank</dt>
+          <dd className="font-medium">{payment.bank.bankName}</dd>
+        </div>
+        <div className="flex justify-between gap-3">
+          <dt className="text-muted-foreground">Account</dt>
+          <dd className="font-medium">{payment.bank.accountNumber}</dd>
+        </div>
+        <div className="flex justify-between gap-3">
+          <dt className="text-muted-foreground">IFSC</dt>
+          <dd className="font-medium">{payment.bank.ifsc}</dd>
+        </div>
+        <div className="flex justify-between gap-3">
+          <dt className="text-muted-foreground">Amount</dt>
+          <dd className="font-medium">{formatInr(payment.amount, { compact: true })}</dd>
+        </div>
+        <div className="flex justify-between gap-3">
+          <dt className="text-muted-foreground">Remark</dt>
+          <dd className="font-medium">{payment.orderNumber}</dd>
+        </div>
+      </dl>
+      <p className="mt-3 text-xs leading-5 text-muted-foreground">
+        Put the order number in the transfer remark so we can match your payment.
+      </p>
+    </div>
+  );
+}
+
+function PaymentStep({
+  payment,
+  onDone,
+}: {
+  payment: CheckoutPayment;
+  onDone: () => void;
+}) {
+  const whatsapp = buildWhatsAppUrl(
+    `Hi GadgetCenter, I have paid ${formatInr(payment.amount, { compact: true })} for order ${payment.orderNumber}.`,
+  );
+
+  return (
+    <div className="mx-auto w-full max-w-xl px-4 py-8">
+      <h1 className="text-2xl font-semibold tracking-tight">Pay for order {payment.orderNumber}</h1>
+      <p className="mt-2 text-sm text-muted-foreground">
+        Amount: <span className="font-medium text-foreground">{formatInr(payment.amount, { compact: true })}</span>
+        . The order is confirmed after we see the credit in the account.
+      </p>
+
+      {payment.method === "UPI" && payment.upiUri ? (
+        <div className="mt-6 rounded-xl border border-border p-4">
+          <h2 className="text-sm font-semibold">Pay by UPI</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Scan this QR or open your UPI app. Amount is already filled.</p>
+          <div className="mt-4 flex flex-col items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={qrImageUrl(payment.upiUri)}
+              alt="UPI QR code"
+              width={240}
+              height={240}
+              className="rounded-lg border border-border bg-white p-2"
+            />
+            <p className="text-sm font-medium">{payment.upiId}</p>
+            <div className="flex flex-wrap justify-center gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={() => void copyText(payment.upiId, "UPI ID")}>
+                Copy UPI ID
+              </Button>
+              <a href={payment.upiUri} className="inline-flex">
+                <Button type="button" size="sm">
+                  Open UPI app
+                </Button>
+              </a>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <p className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+          This order is over {formatInr(UPI_LIMIT_RUPEES, { compact: true })}, so UPI cannot be used. Pay by bank
+          transfer, or place two smaller orders.
+        </p>
+      )}
+
+      <div className="mt-4">
+        <BankDetails payment={payment} />
+      </div>
+
+      <div className="mt-6 flex flex-col gap-2 sm:flex-row">
+        <Button type="button" className="h-10" onClick={onDone}>
+          I have paid
+        </Button>
+        {whatsapp ? (
+          <a href={whatsapp} target="_blank" rel="noopener noreferrer">
+            <Button type="button" variant="outline" className="h-10">
+              Send screenshot on WhatsApp
+            </Button>
+          </a>
+        ) : null}
+      </div>
+    </div>
+  );
 }
 
 export function CheckoutForm() {
@@ -77,6 +174,7 @@ export function CheckoutForm() {
   const [form, setForm] = useState<CheckoutFormState>(emptyForm);
   const [agreed, setAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [payment, setPayment] = useState<CheckoutPayment | null>(null);
 
   const lines = cart.items
     .map((item) => {
@@ -89,60 +187,7 @@ export function CheckoutForm() {
     .filter((line) => line !== null);
 
   const subtotal = lines.reduce((sum, line) => sum + line.product.salePrice * line.quantity, 0);
-
-  async function confirmPayment(payload: RazorpaySuccessResponse) {
-    const verified = await apiClient.post<AdminOrder>(routes.api.razorpayVerify, payload);
-    if (!verified.success || !verified.data) {
-      throw new Error(verified.message || "Payment could not be confirmed.");
-    }
-    clearCart();
-    toast.success("Payment received. Your order is confirmed.");
-    router.push(`${routes.orderSuccess}?order=${encodeURIComponent(verified.data.orderNumber)}`);
-  }
-
-  function openRazorpay(payment: CheckoutPayment) {
-    return new Promise<void>((resolve, reject) => {
-      if (!window.Razorpay) {
-        reject(new Error("Razorpay checkout is not available."));
-        return;
-      }
-      let settled = false;
-      const checkout = new window.Razorpay({
-        key: payment.keyId,
-        amount: payment.amount,
-        currency: payment.currency,
-        name: payment.name,
-        description: payment.description,
-        order_id: payment.orderId,
-        prefill: payment.prefill,
-        theme: { color: "#111827" },
-        handler: (response: RazorpaySuccessResponse) => {
-          if (settled) {
-            return;
-          }
-          settled = true;
-          confirmPayment(response).then(resolve).catch(reject);
-        },
-        modal: {
-          ondismiss: () => {
-            if (settled) {
-              return;
-            }
-            settled = true;
-            reject(new Error("Payment was cancelled."));
-          },
-        },
-      });
-      checkout.on("payment.failed", () => {
-        if (settled) {
-          return;
-        }
-        settled = true;
-        reject(new Error("Payment failed. Try again."));
-      });
-      checkout.open();
-    });
-  }
+  const upiAllowed = subtotal <= UPI_LIMIT_RUPEES;
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -170,15 +215,29 @@ export function CheckoutForm() {
         },
       );
       if (!response.success || !response.data) {
-        throw new Error(response.message || "Could not start payment.");
+        throw new Error(response.message || "Could not place the order.");
       }
-      await loadRazorpayScript();
-      await openRazorpay(response.data.payment);
+      setPayment(response.data.payment);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not complete payment.");
+      toast.error(error instanceof Error ? error.message : "Could not place the order.");
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function finishPayment() {
+    const orderNumber = payment?.orderNumber;
+    clearCart();
+    toast.success("Thanks. We will confirm the order after the payment appears.");
+    router.push(
+      orderNumber
+        ? `${routes.orderSuccess}?order=${encodeURIComponent(orderNumber)}`
+        : routes.orderSuccess,
+    );
+  }
+
+  if (payment) {
+    return <PaymentStep payment={payment} onDone={finishPayment} />;
   }
 
   if (cart.items.length === 0) {
@@ -198,8 +257,9 @@ export function CheckoutForm() {
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">Checkout</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Pay online with UPI, cards or netbanking. Cash on delivery is not available. The order is
-          confirmed only after payment succeeds.
+          {upiAllowed
+            ? "Pay with UPI (scan QR or UPI ID). Bank transfer is also available. Cash on delivery is not offered."
+            : `This cart is over ${formatInr(UPI_LIMIT_RUPEES, { compact: true })}, so pay by bank transfer (IMPS/NEFT) or split into smaller orders.`}
         </p>
         <form className="mt-6 grid gap-3" onSubmit={onSubmit}>
           <div className="grid gap-1.5">
@@ -306,7 +366,11 @@ export function CheckoutForm() {
             </span>
           </label>
           <Button type="submit" className="mt-2 h-10" disabled={submitting || !agreed}>
-            {submitting ? "Opening payment…" : `Pay ${formatInr(subtotal, { compact: true })}`}
+            {submitting
+              ? "Placing order…"
+              : upiAllowed
+                ? `Continue to UPI · ${formatInr(subtotal, { compact: true })}`
+                : `Continue to bank transfer · ${formatInr(subtotal, { compact: true })}`}
           </Button>
         </form>
       </div>
@@ -327,16 +391,9 @@ export function CheckoutForm() {
           <p className="font-semibold">{formatInr(subtotal, { compact: true })}</p>
         </div>
         <p className="mt-3 text-sm leading-6 text-muted-foreground">
-          Online payment only via Razorpay (UPI, cards or netbanking). Prices are in INR. Free
-          shipping in India on prepaid orders. See{" "}
-          <Link href={routes.shippingPolicy} className="underline">
-            Shipping
-          </Link>{" "}
-          and{" "}
-          <Link href={routes.refundPolicy} className="underline">
-            Refund &amp; Cancellation
-          </Link>
-          .
+          {upiAllowed
+            ? "UPI up to ₹1 lakh. Pay to the UPI ID / QR shown next. We confirm the order after the money arrives."
+            : "UPI is blocked above ₹1 lakh. Use IMPS/NEFT to the Bank of Maharashtra account shown next."}
         </p>
       </aside>
     </div>

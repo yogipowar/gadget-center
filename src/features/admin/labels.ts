@@ -65,6 +65,8 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   COD: "Cash on delivery",
   ENQUIRY: "Enquiry / request",
   RAZORPAY: "Online (Razorpay)",
+  UPI: "UPI",
+  BANK: "Bank transfer",
 };
 
 export const ENQUIRY_STATUS_LABELS: Record<"OPEN" | "REPLIED" | "CLOSED", string> = {

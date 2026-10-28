@@ -8,9 +8,9 @@ import { ShopOrder } from "@/database/models/order";
 import { ensureDatabase } from "@/database/sequelize";
 import type { AdminOrder } from "@/features/admin/types";
 import type { CartLine, CheckoutPayment } from "@/features/cart/types";
-import { env } from "@/config/env";
+import { publicEnv } from "@/config/public-env";
 import { NotFoundError, ValidationError } from "@/lib/api/errors";
-import { createRazorpayOrder } from "@/lib/payments/razorpay";
+import { buildUpiPayUrl, canPayByUpi } from "@/lib/upi";
 import { getProductBySlug, reduceStock } from "@/services/product-service";
 
 export type CheckoutInput = {
@@ -47,7 +47,7 @@ export async function listOrders() {
   return rows.map(toAdminOrder);
 }
 
-async function markOrderPaid(order: ShopOrder, paymentId: string) {
+async function markOrderPaid(order: ShopOrder, method: AdminOrder["paymentMethod"], paymentId?: string) {
   if (order.paymentStatus === "PAID") {
     return toAdminOrder(order);
   }
@@ -61,11 +61,21 @@ async function markOrderPaid(order: ShopOrder, paymentId: string) {
 
   await order.update({
     paymentStatus: "PAID",
-    paymentMethod: "RAZORPAY",
+    paymentMethod: method,
     status: "CONFIRMED",
-    razorpayPaymentId: paymentId,
+    razorpayPaymentId: paymentId || order.razorpayPaymentId,
   });
   return toAdminOrder(order);
+}
+
+export async function markOrderPaidById(orderId: string) {
+  await ensureDatabase();
+  const order = await ShopOrder.findByPk(orderId);
+  if (!order) {
+    throw new NotFoundError("Order not found.");
+  }
+  const method = order.paymentMethod === "BANK" ? "BANK" : order.paymentMethod === "UPI" ? "UPI" : "UPI";
+  return markOrderPaid(order, method);
 }
 
 export async function createCheckout(input: CheckoutInput) {
@@ -97,12 +107,7 @@ export async function createCheckout(input: CheckoutInput) {
     .join(", ")
     .slice(0, 500);
   const orderNumber = `${ORDER_NUMBER_PREFIX}${Date.now().toString().slice(-8)}`;
-
-  const razorpay = await createRazorpayOrder({
-    amountRupees: total,
-    receipt: orderNumber,
-    notes: { orderNumber, mobile },
-  });
+  const method = canPayByUpi(total) ? "UPI" : "BANK";
 
   const order = await ShopOrder.create({
     id: randomUUID(),
@@ -118,8 +123,7 @@ export async function createCheckout(input: CheckoutInput) {
     total,
     status: "PENDING",
     paymentStatus: "PENDING",
-    paymentMethod: "RAZORPAY",
-    razorpayOrderId: razorpay.orderId,
+    paymentMethod: method,
   });
 
   for (const line of lines) {
@@ -135,16 +139,19 @@ export async function createCheckout(input: CheckoutInput) {
   }
 
   const payment: CheckoutPayment = {
-    keyId: razorpay.keyId,
-    orderId: razorpay.orderId,
-    amount: razorpay.amount,
-    currency: razorpay.currency,
-    name: env.NEXT_PUBLIC_SITE_NAME,
-    description: `Order ${order.orderNumber}`,
-    prefill: {
-      name,
-      contact: mobile,
-      email: input.email?.trim() || undefined,
+    method,
+    amount: total,
+    orderNumber: order.orderNumber,
+    upiId: publicEnv.upiId,
+    upiUri: canPayByUpi(total)
+      ? buildUpiPayUrl({ amountRupees: total, orderNumber: order.orderNumber })
+      : null,
+    payeeName: publicEnv.bankAccountName,
+    bank: {
+      accountName: publicEnv.bankAccountName,
+      bankName: publicEnv.bankName,
+      accountNumber: publicEnv.bankAccountNumber,
+      ifsc: publicEnv.bankIfsc,
     },
   };
 
@@ -160,5 +167,5 @@ export async function confirmRazorpayPayment(input: {
   if (!order) {
     throw new NotFoundError("Order not found for this payment.");
   }
-  return markOrderPaid(order, input.razorpayPaymentId);
+  return markOrderPaid(order, "RAZORPAY", input.razorpayPaymentId);
 }
