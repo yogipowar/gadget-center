@@ -81,7 +81,6 @@ async function preferIpv4Host() {
     return;
   }
   const resolved = host === "localhost" ? "127.0.0.1" : (await lookup(host, { family: 4 })).address;
-  sequelize.config.host = resolved;
   const manager = sequelize.connectionManager as { config?: { host?: string } };
   if (manager.config) {
     manager.config.host = resolved;
