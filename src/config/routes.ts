@@ -63,5 +63,7 @@ export const routes = {
     adminSession: "/api/v1/admin/session",
     adminProducts: "/api/v1/admin/products",
     adminOrders: "/api/v1/admin/orders",
+    adminUploads: "/api/v1/admin/uploads",
+    media: (id: string) => `/api/v1/media/${id}`,
   },
 } as const;

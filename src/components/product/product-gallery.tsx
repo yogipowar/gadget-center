@@ -1,11 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRef, useState } from "react";
 
 import { ProductMedia } from "@/components/product/product-media";
-import { assetPath } from "@/lib/asset-path";
+import { StoreImage } from "@/components/product/store-image";
 import { cn } from "@/lib/utils";
 
 const LENS = 0.42;
@@ -86,7 +85,7 @@ export function ProductGallery({ images, name, accent }: ProductGalleryProps) {
               aria-label={`${name} image ${index + 1} of ${shots.length}`}
               aria-current={index === currentIndex}
             >
-              <Image src={assetPath(src)} alt="" fill sizes="64px" className="object-contain p-1" />
+              <StoreImage src={src} alt="" fill sizes="64px" className="object-contain p-1" />
             </button>
           ))}
         </div>
@@ -102,8 +101,8 @@ export function ProductGallery({ images, name, accent }: ProductGalleryProps) {
               onMouseMove={updatePointer}
               onMouseLeave={() => setZooming(false)}
             >
-              <Image
-                src={assetPath(current)}
+              <StoreImage
+                src={current}
                 alt={`${name}, view ${currentIndex + 1}`}
                 fill
                 preload={currentIndex === 0}
@@ -171,8 +170,8 @@ export function ProductGallery({ images, name, accent }: ProductGalleryProps) {
                 transformOrigin: `${lensLeft * 100 + (LENS * 100) / 2}% ${lensTop * 100 + (LENS * 100) / 2}%`,
               }}
             >
-              <Image
-                src={assetPath(current)}
+              <StoreImage
+                src={current}
                 alt=""
                 fill
                 sizes="1200px"

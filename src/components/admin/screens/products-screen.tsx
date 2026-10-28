@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { AdminField, AdminFormDialog, adminSelectClassName } from "@/components/admin/admin-form-dialog";
 import { AdminPage } from "@/components/admin/admin-page";
 import { AdminTable } from "@/components/admin/admin-table";
+import { ProductImagesField } from "@/components/admin/product-images-field";
+import { StoreImage } from "@/components/product/store-image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,6 +45,7 @@ type ProductForm = {
   featured: boolean;
   bestseller: boolean;
   newArrival: boolean;
+  images: string[];
 };
 
 const emptyForm: ProductForm = {
@@ -63,6 +66,7 @@ const emptyForm: ProductForm = {
   featured: false,
   bestseller: false,
   newArrival: true,
+  images: [],
 };
 
 function toForm(product: CatalogProduct, onHand: number): ProductForm {
@@ -84,6 +88,7 @@ function toForm(product: CatalogProduct, onHand: number): ProductForm {
     featured: product.featured,
     bestseller: product.bestseller,
     newArrival: product.newArrival,
+    images: product.images?.length ? product.images : product.image ? [product.image] : [],
   };
 }
 
@@ -94,6 +99,7 @@ export function ProductsScreen() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [form, setForm] = useState<ProductForm>(emptyForm);
+  const [uploadingImages, setUploadingImages] = useState(false);
 
   function openCreate() {
     setEditingId(null);
@@ -116,6 +122,10 @@ export function ProductsScreen() {
   }
 
   async function onSave() {
+    if (uploadingImages) {
+      toast.error("Wait for images to finish uploading.");
+      return;
+    }
     const name = form.name.trim();
     const sku = form.sku.trim();
     const brand = form.brand.trim();
@@ -160,8 +170,8 @@ export function ProductsScreen() {
         newArrival: form.newArrival,
         inStock: onHand > 0,
         accent: current?.accent ?? "navy",
-        image: current?.image,
-        images: current?.images,
+        image: form.images[0],
+        images: form.images,
         onHand: Number.isFinite(onHand) ? Math.max(0, onHand) : 0,
       });
       toast.success(editingId ? "Product updated." : "Product added. It will show in the store catalog.");
@@ -216,9 +226,18 @@ export function ProductsScreen() {
           {
             header: "Product",
             cell: (row) => (
-              <div>
-                <p className="font-medium">{row.name}</p>
-                <p className="text-xs text-muted-foreground">{row.sku}</p>
+              <div className="flex items-center gap-3">
+                <div className="relative size-10 shrink-0 overflow-hidden rounded-md border bg-zinc-50">
+                  {row.image ? (
+                    <StoreImage src={row.image} alt="" fill sizes="40px" className="object-contain p-0.5" />
+                  ) : (
+                    <span className="block size-full bg-zinc-100" />
+                  )}
+                </div>
+                <div>
+                  <p className="font-medium">{row.name}</p>
+                  <p className="text-xs text-muted-foreground">{row.sku}</p>
+                </div>
               </div>
             ),
           },
@@ -271,9 +290,11 @@ export function ProductsScreen() {
         open={open}
         onOpenChange={setOpen}
         title={editingId ? "Edit product" : "Add product"}
-        description="Prices are in INR. Specs can be a comma-separated list."
+        description="Prices are in INR. Specs can be a comma-separated list. Upload multiple product photos."
         onSubmit={onSave}
-        submitLabel={saving ? "Saving…" : "Save"}
+        submitLabel={saving ? "Saving…" : uploadingImages ? "Uploading…" : "Save"}
+        submitDisabled={saving || uploadingImages}
+        contentClassName="max-h-[90vh] overflow-y-auto sm:max-w-xl"
       >
         <AdminField label="Name">
           <Input
@@ -384,6 +405,11 @@ export function ProductsScreen() {
             <Input value={form.onHand} inputMode="numeric" onChange={(event) => setForm((current) => ({ ...current, onHand: event.target.value }))} />
           </AdminField>
         </div>
+        <ProductImagesField
+          images={form.images}
+          onChange={(images) => setForm((current) => ({ ...current, images }))}
+          onBusyChange={setUploadingImages}
+        />
         <AdminField label="Warranty">
           <Input value={form.warranty} onChange={(event) => setForm((current) => ({ ...current, warranty: event.target.value }))} />
         </AdminField>

@@ -5,6 +5,7 @@ import { ShopOrder } from "@/database/models/order";
 import { Lead } from "@/database/models/lead";
 import { Product } from "@/database/models/product";
 import { StaffUser } from "@/database/models/staff-user";
+import { UploadedImage } from "@/database/models/uploaded-image";
 import { sequelize } from "@/database/sequelize";
 
 ShopOrder.hasMany(OrderItem, { foreignKey: "orderId", as: "items" });
@@ -16,10 +17,11 @@ export const models = {
   ShopOrder,
   OrderItem,
   Lead,
+  UploadedImage,
 } as const;
 
 export function getSequelize() {
   return sequelize;
 }
 
-export { sequelize, Product, StaffUser, ShopOrder, OrderItem, Lead };
+export { sequelize, Product, StaffUser, ShopOrder, OrderItem, Lead, UploadedImage };

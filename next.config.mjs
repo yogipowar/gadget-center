@@ -24,6 +24,9 @@ const nextConfig = {
   turbopack: {
     root: path.resolve(__dirname),
   },
+  experimental: {
+    proxyClientMaxBodySize: "8mb",
+  },
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [],

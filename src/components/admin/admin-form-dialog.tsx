@@ -20,6 +20,8 @@ export function AdminFormDialog({
   children,
   onSubmit,
   submitLabel = "Save",
+  submitDisabled = false,
+  contentClassName,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -28,6 +30,8 @@ export function AdminFormDialog({
   children: ReactNode;
   onSubmit: () => void;
   submitLabel?: string;
+  submitDisabled?: boolean;
+  contentClassName?: string;
 }) {
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -36,7 +40,7 @@ export function AdminFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg" showCloseButton>
+      <DialogContent className={contentClassName ?? "max-h-[90vh] overflow-y-auto sm:max-w-lg"} showCloseButton>
         <form onSubmit={handleSubmit} className="grid gap-4">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
@@ -47,7 +51,9 @@ export function AdminFormDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit">{submitLabel}</Button>
+            <Button type="submit" disabled={submitDisabled}>
+              {submitLabel}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

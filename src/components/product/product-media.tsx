@@ -1,7 +1,6 @@
-import Image from "next/image";
 import { Laptop } from "lucide-react";
 
-import { assetPath } from "@/lib/asset-path";
+import { StoreImage } from "@/components/product/store-image";
 import { cn } from "@/lib/utils";
 
 const accentClass: Record<"navy" | "slate" | "teal" | "stone", string> = {
@@ -36,8 +35,8 @@ export function ProductMedia({
       )}
     >
       {image ? (
-        <Image
-          src={assetPath(image)}
+        <StoreImage
+          src={image}
           alt={name}
           fill
           sizes={compact ? "(max-width: 1024px) 50vw, 240px" : "(max-width: 1024px) 100vw, 560px"}
