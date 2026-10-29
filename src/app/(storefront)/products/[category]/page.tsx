@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { ProductListing } from "@/components/product/product-listing";
 import { shopCategories } from "@/features/catalog/queries";
+import { loadCategories } from "@/lib/catalog-server";
 
 const categoryMeta: Record<string, { title: string; description: string }> = {
   laptops: {
@@ -79,20 +80,31 @@ export const dynamicParams = true;
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
   const { category } = await params;
   const meta = categoryMeta[category];
-  if (!meta) {
+  if (meta) {
+    return { title: meta.title, description: meta.description };
+  }
+  const categories = await loadCategories();
+  const match = categories.find((item) => item.slug === category);
+  if (!match) {
     return { title: "Products" };
   }
-  return { title: meta.title, description: meta.description };
+  return { title: match.name, description: match.description || `Shop ${match.name} at GadgetCenter.` };
 }
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { category } = await params;
   const meta = categoryMeta[category];
+  const categories = meta ? [] : await loadCategories();
+  const match = categories.find((item) => item.slug === category);
 
   return (
     <ProductListing
-      title={meta?.title ?? category.replace(/-/g, " ")}
-      description={meta?.description ?? "Products in this category, including items added from the admin panel."}
+      title={meta?.title ?? match?.name ?? category.replace(/-/g, " ")}
+      description={
+        meta?.description ??
+        match?.description ??
+        "Products in this category, including items added from the admin panel."
+      }
       filters={{ categorySlug: category }}
     />
   );

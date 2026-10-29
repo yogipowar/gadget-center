@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 
+import { PaginationBar } from "@/components/pagination-bar";
 import {
   Table,
   TableBody,
@@ -11,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import { paginate } from "@/utils/pagination";
 
 export type AdminColumn<T> = {
   header: string;
@@ -28,6 +30,8 @@ export function AdminTable<T>({
   getRowId,
   selectedIds,
   onSelectedIdsChange,
+  onRowClick,
+  pageSize,
 }: {
   rows: T[];
   columns: AdminColumn<T>[];
@@ -38,8 +42,11 @@ export function AdminTable<T>({
   getRowId?: (row: T) => string;
   selectedIds?: string[];
   onSelectedIdsChange?: (ids: string[]) => void;
+  onRowClick?: (row: T) => void;
+  pageSize?: number;
 }) {
   const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     if (!needle) {
@@ -48,11 +55,17 @@ export function AdminTable<T>({
     return rows.filter((row) => searchText(row).toLowerCase().includes(needle));
   }, [query, rows, searchText]);
 
+  useEffect(() => {
+    setPage(1);
+  }, [query]);
+
+  const paged = pageSize ? paginate(filtered, page, pageSize) : paginate(filtered, 1, Math.max(filtered.length, 1));
+  const visibleRows = pageSize ? paged.items : filtered;
   const selectable = Boolean(getRowId && onSelectedIdsChange);
   const selected = new Set(selectedIds ?? []);
-  const filteredIds = selectable && getRowId ? filtered.map((row) => getRowId(row)) : [];
-  const allFilteredSelected =
-    filteredIds.length > 0 && filteredIds.every((id) => selected.has(id));
+  const visibleIds = selectable && getRowId ? visibleRows.map((row) => getRowId(row)) : [];
+  const allVisibleSelected =
+    visibleIds.length > 0 && visibleIds.every((id) => selected.has(id));
   const colSpan = columns.length + (selectable ? 1 : 0);
 
   function toggle(id: string) {
@@ -68,17 +81,17 @@ export function AdminTable<T>({
     onSelectedIdsChange([...next]);
   }
 
-  function toggleAllFiltered() {
+  function toggleAllVisible() {
     if (!onSelectedIdsChange) {
       return;
     }
-    if (allFilteredSelected) {
-      const drop = new Set(filteredIds);
+    if (allVisibleSelected) {
+      const drop = new Set(visibleIds);
       onSelectedIdsChange((selectedIds ?? []).filter((id) => !drop.has(id)));
       return;
     }
     const next = new Set(selectedIds ?? []);
-    for (const id of filteredIds) {
+    for (const id of visibleIds) {
       next.add(id);
     }
     onSelectedIdsChange([...next]);
@@ -104,8 +117,8 @@ export function AdminTable<T>({
                   <input
                     type="checkbox"
                     aria-label="Select all visible rows"
-                    checked={allFilteredSelected}
-                    onChange={toggleAllFiltered}
+                    checked={allVisibleSelected}
+                    onChange={toggleAllVisible}
                   />
                 </TableHead>
               ) : null}
@@ -124,16 +137,21 @@ export function AdminTable<T>({
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((row, index) => {
+              visibleRows.map((row, index) => {
                 const id = getRowId?.(row);
                 return (
-                  <TableRow key={id ?? index}>
+                  <TableRow
+                    key={id ?? index}
+                    className={onRowClick ? "cursor-pointer" : undefined}
+                    onClick={onRowClick ? () => onRowClick(row) : undefined}
+                  >
                     {selectable && id ? (
                       <TableCell className="w-10">
                         <input
                           type="checkbox"
                           aria-label="Select row"
                           checked={selected.has(id)}
+                          onClick={(event) => event.stopPropagation()}
                           onChange={() => toggle(id)}
                         />
                       </TableCell>
@@ -150,10 +168,23 @@ export function AdminTable<T>({
           </TableBody>
         </Table>
       </div>
-      <p className="text-xs text-muted-foreground">
-        Showing {filtered.length} of {rows.length}
-        {selectable && selected.size > 0 ? ` · ${selected.size} selected` : ""}
-      </p>
+      {pageSize ? (
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <PaginationBar
+            className="flex-1 text-xs"
+            meta={paged}
+            onPageChange={setPage}
+          />
+          {selectable && selected.size > 0 ? (
+            <p className="text-xs text-muted-foreground">{selected.size} selected</p>
+          ) : null}
+        </div>
+      ) : (
+        <p className="text-xs text-muted-foreground">
+          Showing {filtered.length} of {rows.length}
+          {selectable && selected.size > 0 ? ` · ${selected.size} selected` : ""}
+        </p>
+      )}
     </div>
   );
 }

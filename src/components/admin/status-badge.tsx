@@ -26,6 +26,7 @@ const tones: Record<string, string> = {
   RETURN_REQUESTED: "bg-orange-100 text-orange-800",
   RETURNED: "bg-muted text-muted-foreground",
   PAID: "bg-emerald-100 text-emerald-800",
+  REPORTED: "bg-orange-100 text-orange-800",
   FAILED: "bg-rose-100 text-rose-800",
   REFUNDED: "bg-muted text-muted-foreground",
   COD_PENDING: "bg-amber-100 text-amber-900",

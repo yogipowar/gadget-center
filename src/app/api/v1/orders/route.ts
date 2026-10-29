@@ -5,7 +5,9 @@ import { COOKIE_NAMES } from "@/constants/storage";
 import type { CartLine, CartState } from "@/features/cart/types";
 import { handleApiError } from "@/lib/api/error-handler";
 import { success } from "@/lib/api/response";
-import { createCheckout } from "@/services/order-service";
+import { customerCookieOptions } from "@/lib/auth/customer-request";
+import { signCustomerToken } from "@/lib/auth/customer-token";
+import { createCheckout, normalizeMobile } from "@/services/order-service";
 
 export const dynamic = "force-dynamic";
 

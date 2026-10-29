@@ -4,13 +4,18 @@ import { handleApiError } from "@/lib/api/error-handler";
 import { ValidationError } from "@/lib/api/errors";
 import { success } from "@/lib/api/response";
 import { requireStaffSession } from "@/lib/auth/staff-request";
-import { listOrders, markOrderPaidById } from "@/services/order-service";
+import { getOrderById, listOrders, markOrderPaidById } from "@/services/order-service";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     await requireStaffSession();
+    const id = request.nextUrl.searchParams.get("id")?.trim() ?? "";
+    if (id) {
+      const order = await getOrderById(id);
+      return NextResponse.json(success(order, "Order loaded"));
+    }
     const orders = await listOrders();
     return NextResponse.json(success(orders, "Orders loaded"));
   } catch (error) {

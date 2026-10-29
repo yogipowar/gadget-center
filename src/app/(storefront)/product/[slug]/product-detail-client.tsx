@@ -12,12 +12,11 @@ import { routes } from "@/config/routes";
 import { siteConfig } from "@/config/site";
 import { useAdminCatalog } from "@/features/admin/catalog-store";
 import {
+  categoryHref,
   getProductBySlug,
   productFacts,
   productGallery,
-  productListingCopy,
   relatedProducts,
-  shopCategories,
 } from "@/features/catalog/queries";
 import type { CatalogProduct } from "@/features/catalog/types";
 import { formatInr, discountPercent } from "@/utils/currency";
@@ -81,7 +80,7 @@ export function ProductDetailClient({
 
   const discount = discountPercent(product.price, product.salePrice);
   const related = relatedProducts(product, catalog.products);
-  const relatedCategory = shopCategories.find((item) => item.slug === product.categorySlug);
+  const relatedCategory = catalog.categories.find((item) => item.slug === product.categorySlug);
   const facts = productFacts(product);
   const onHand = catalog.inventory.find((row) => row.id === product.id)?.onHand ?? product.onHand ?? 0;
   const phone = siteConfig.contact.orderPhone;
@@ -135,10 +134,12 @@ export function ProductDetailClient({
           <p className="mt-1 text-xs text-muted-foreground">
             Selling price in INR. Free shipping in India on prepaid orders.
           </p>
-          <div className="mt-4">
-            <h2 className="text-sm font-semibold text-zinc-900">Product description</h2>
-            <p className="mt-2 text-sm leading-6 text-zinc-700">{productListingCopy(product)}</p>
-          </div>
+          {product.shortDescription.trim() ? (
+            <div className="mt-4">
+              <h2 className="text-sm font-semibold text-zinc-900">Product description</h2>
+              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-zinc-700">{product.shortDescription.trim()}</p>
+            </div>
+          ) : null}
 
           <div className="mt-5">
             <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Availability</p>
@@ -228,7 +229,7 @@ export function ProductDetailClient({
           <div className="mb-5 flex items-end justify-between gap-3">
             <h2 className="text-xl font-semibold tracking-tight sm:text-2xl">Related products</h2>
             <Link
-              href={relatedCategory?.href ?? routes.products}
+              href={relatedCategory ? categoryHref(relatedCategory.slug) : routes.products}
               className="text-sm font-medium text-muted-foreground hover:text-foreground"
             >
               View all

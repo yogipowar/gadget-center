@@ -1,4 +1,4 @@
-import { LayoutDashboard, Package, ShoppingCart, type LucideIcon } from "lucide-react";
+import { FolderTree, LayoutDashboard, Package, ShoppingCart, type LucideIcon } from "lucide-react";
 
 import { routes } from "@/config/routes";
 
@@ -19,6 +19,7 @@ export const adminNav: AdminNavGroup[] = [
     items: [
       { href: routes.admin.dashboard, label: "Dashboard", icon: LayoutDashboard },
       { href: routes.admin.products, label: "Products", icon: Package },
+      { href: routes.admin.categories, label: "Categories", icon: FolderTree },
       { href: routes.admin.orders, label: "Orders", icon: ShoppingCart },
     ],
   },

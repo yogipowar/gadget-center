@@ -1,17 +1,16 @@
-import { SimplePage, simpleMetadata } from "@/components/layout/simple-page";
+import { AccountScreen } from "@/components/account/account-screen";
+import { simpleMetadata } from "@/components/layout/simple-page";
 
 export const metadata = simpleMetadata(
   "Account",
-  "Customer accounts use your mobile number. Order history will appear here after checkout is connected.",
+  "Sign in with your mobile and order number to see order status.",
 );
 
 export default function AccountPage() {
   return (
-    <SimplePage
+    <AccountScreen
       title="Your account"
-      description="Customer login is mobile-number based. OTP sign-in will be enabled with the customer module."
-    >
-      <p>Once you place an order, it will show here with its status and lead history if you were captured from an ad.</p>
-    </SimplePage>
+      description="Use the mobile number and order number from checkout to see payment and delivery status."
+    />
   );
 }

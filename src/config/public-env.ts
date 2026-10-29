@@ -11,7 +11,7 @@ export const publicEnv = {
   gaMeasurementId: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? "",
   orderPhone: process.env.NEXT_PUBLIC_PHONE_ORDERS ?? "8530613876",
   repairPhone: process.env.NEXT_PUBLIC_PHONE_REPAIR ?? "8530613876",
-  contactEmail: process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "info@scrollosoft.com",
+  contactEmail: process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "gadgetcenterkop@gmail.com",
   address:
     process.env.NEXT_PUBLIC_BUSINESS_ADDRESS ??
     "Jyotirling Colony, Bondre Nagar, Phulewadi, Kolhapur, Maharashtra 416010",

@@ -19,7 +19,7 @@ import { routes } from "@/config/routes";
 import { siteConfig } from "@/config/site";
 import { formatPhone, telHref } from "@/lib/contact";
 import { cartCount, useCart } from "@/features/cart/store";
-import { searchSuggestions } from "@/features/catalog/queries";
+import { categoryHref, searchSuggestions } from "@/features/catalog/queries";
 import { useAdminCatalog } from "@/features/admin/catalog-store";
 import { assetPath } from "@/lib/asset-path";
 import { cn } from "@/lib/utils";
@@ -48,6 +48,7 @@ export function SiteHeader() {
     [catalog.products, query],
   );
   const liveCategories = catalog.categories.filter((category) => category.live);
+  const extraNav = liveCategories.filter((category) => !category.builtin);
 
   function onSearch(event: FormEvent) {
     event.preventDefault();
@@ -167,6 +168,15 @@ export function SiteHeader() {
               {item.label}
             </Link>
           ))}
+          {extraNav.map((item) => (
+            <Link
+              key={item.slug}
+              href={categoryHref(item.slug)}
+              className="text-sm whitespace-nowrap text-white/85 hover:text-white"
+            >
+              {item.name}
+            </Link>
+          ))}
         </div>
       </div>
 
@@ -200,7 +210,7 @@ export function SiteHeader() {
             {liveCategories.map((item) => (
               <Link
                 key={item.slug}
-                href={`/products/${item.slug}`}
+                href={categoryHref(item.slug)}
                 className="rounded-md px-2 py-2 text-sm hover:bg-muted"
                 onClick={() => setMenuOpen(false)}
               >

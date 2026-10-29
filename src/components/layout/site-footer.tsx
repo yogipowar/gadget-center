@@ -1,12 +1,17 @@
+"use client";
+
 import Link from "next/link";
 
 import { legal } from "@/config/legal";
 import { routes } from "@/config/routes";
 import { siteConfig } from "@/config/site";
-import { additionalCategories, computerCategories } from "@/features/catalog/queries";
+import { useAdminCatalog } from "@/features/admin/catalog-store";
+import { additionalCategories, categoryHref, computerCategories } from "@/features/catalog/queries";
 import { formatPhone, telHref } from "@/lib/contact";
 
 export function SiteFooter() {
+  const catalog = useAdminCatalog();
+  const extraCategories = catalog.categories.filter((category) => category.live && !category.builtin);
   return (
     <footer className="mt-auto bg-brand-navy text-white">
       <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-4">
@@ -52,6 +57,13 @@ export function SiteFooter() {
               <li key={category.slug}>
                 <Link href={category.href} className="hover:text-white">
                   {category.title}
+                </Link>
+              </li>
+            ))}
+            {extraCategories.map((category) => (
+              <li key={category.slug}>
+                <Link href={categoryHref(category.slug)} className="hover:text-white">
+                  {category.name}
                 </Link>
               </li>
             ))}

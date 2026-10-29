@@ -100,7 +100,7 @@ function PaymentStep({
   onDone,
 }: {
   payment: CheckoutPayment;
-  onDone: () => void;
+  onDone: () => void | Promise<void>;
 }) {
   const whatsapp = buildWhatsAppUrl(
     `Hi GadgetCenter, I have paid ${formatInr(payment.amount, { compact: true })} for order ${payment.orderNumber}.`,
@@ -152,7 +152,7 @@ function PaymentStep({
       </div>
 
       <div className="mt-6 flex flex-col gap-2 sm:flex-row">
-        <Button type="button" className="h-10" onClick={onDone}>
+        <Button type="button" className="h-10" onClick={() => void onDone()}>
           I have paid
         </Button>
         {whatsapp ? (
@@ -225,10 +225,19 @@ export function CheckoutForm() {
     }
   }
 
-  function finishPayment() {
+  async function finishPayment() {
     const orderNumber = payment?.orderNumber;
+    if (orderNumber) {
+      const reported = await apiClient.post(routes.api.orderPaid, {
+        orderNumber,
+        mobile: form.mobile,
+      });
+      if (!reported.success) {
+        toast.error(reported.message || "Order is saved. We could not mark payment as reported.");
+      }
+    }
     clearCart();
-    toast.success("Thanks. We will confirm the order after the payment appears.");
+    toast.success("Thanks. The order is on the admin list. We will confirm after the credit appears.");
     router.push(
       orderNumber
         ? `${routes.orderSuccess}?order=${encodeURIComponent(orderNumber)}`

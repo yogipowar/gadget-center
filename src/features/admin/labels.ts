@@ -54,7 +54,7 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
 };
 
 export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
-  PENDING: "Pending",
+  PENDING: "Unpaid",
   PAID: "Paid",
   FAILED: "Failed",
   REFUNDED: "Refunded",

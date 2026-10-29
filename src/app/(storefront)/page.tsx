@@ -9,12 +9,12 @@ import { ProductGrid } from "@/components/product/product-grid";
 import { routes } from "@/config/routes";
 import {
   budgetBands,
+  categoryHref,
   laptopBrands,
   pickDiverseCatalog,
   queryCatalog,
-  shopCategories,
 } from "@/features/catalog/queries";
-import { loadCatalog } from "@/lib/catalog-server";
+import { loadCatalog, loadCategories } from "@/lib/catalog-server";
 
 function SectionHeading({
   title,
@@ -40,13 +40,17 @@ function SectionHeading({
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const products = await loadCatalog();
+  const [products, categories] = await Promise.all([loadCatalog(), loadCategories()]);
   const featured = pickDiverseCatalog(queryCatalog({ featured: true }, products), 8);
   const arrivals = pickDiverseCatalog(queryCatalog({ newArrival: true }, products), 8);
   const refurbished = pickDiverseCatalog(queryCatalog({ refurbished: true }, products), 8);
   const bestLaptops = queryCatalog({ productType: "LAPTOP", bestseller: true }, products).slice(0, 4);
-  const liveCategories = shopCategories.filter(
-    (category) => queryCatalog({ categorySlug: category.slug }, products).length > 0,
+  const liveCategories = categories.filter(
+    (category) =>
+      category.live &&
+      (category.builtin
+        ? queryCatalog({ categorySlug: category.slug }, products).length > 0
+        : true),
   );
 
   return (
@@ -59,10 +63,10 @@ export default async function HomePage() {
           {liveCategories.map((category) => (
             <Link
               key={category.slug}
-              href={category.href}
+              href={categoryHref(category.slug)}
               className="text-sm text-zinc-800 hover:text-brand-blue hover:underline"
             >
-              {category.title}
+              {category.name}
             </Link>
           ))}
         </div>

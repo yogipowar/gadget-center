@@ -2,13 +2,20 @@
 
 import Link from "next/link";
 
-import { budgetBands, laptopBrands, shopCategories } from "@/features/catalog/queries";
+import { budgetBands, categoryHref, shopCategories } from "@/features/catalog/queries";
 import type { CatalogProduct } from "@/features/catalog/types";
 import type { ProductCondition } from "@/constants/products";
 import { cn } from "@/lib/utils";
 
+type FilterCategory = {
+  slug: string;
+  name: string;
+  href: string;
+};
+
 type ProductFiltersProps = {
   products: CatalogProduct[];
+  categories?: FilterCategory[];
   selectedBrands: string[];
   selectedConditions: ProductCondition[];
   minPrice?: number;
@@ -22,6 +29,7 @@ type ProductFiltersProps = {
 
 export function ProductFilters({
   products,
+  categories,
   selectedBrands,
   selectedConditions,
   minPrice,
@@ -32,8 +40,15 @@ export function ProductFilters({
   onSelectPrice,
   onClear,
 }: ProductFiltersProps) {
-  const availableBrands = laptopBrands.filter((brand) =>
-    products.some((product) => product.brand.toLowerCase() === brand.toLowerCase()),
+  const categoryLinks =
+    categories ??
+    shopCategories.map((category) => ({
+      slug: category.slug,
+      name: category.title,
+      href: categoryHref(category.slug),
+    }));
+  const availableBrands = [...new Set(products.map((product) => product.brand).filter(Boolean))].sort((a, b) =>
+    a.localeCompare(b),
   );
   const hasNew = products.some((product) => product.condition === "NEW");
   const hasRefurbished = products.some((product) => product.condition === "REFURBISHED");
@@ -68,7 +83,7 @@ export function ProductFilters({
               All products
             </Link>
           </li>
-          {shopCategories.map((category) => (
+          {categoryLinks.map((category) => (
             <li key={category.slug}>
               <Link
                 href={category.href}
@@ -77,7 +92,7 @@ export function ProductFilters({
                   lockedCategory === category.slug ? "font-medium text-primary" : "text-muted-foreground",
                 )}
               >
-                {category.title}
+                {category.name}
               </Link>
             </li>
           ))}

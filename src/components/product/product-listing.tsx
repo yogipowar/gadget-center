@@ -4,6 +4,7 @@ import { SlidersHorizontal } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useMemo, useState } from "react";
 
+import { PaginationBar } from "@/components/pagination-bar";
 import { ProductFilters } from "@/components/product/product-filters";
 import { ProductGrid } from "@/components/product/product-grid";
 import { Button } from "@/components/ui/button";
@@ -15,10 +16,12 @@ import {
 } from "@/components/ui/sheet";
 import type { ProductCondition } from "@/constants/products";
 import { useAdminCatalog } from "@/features/admin/catalog-store";
-import { queryCatalog } from "@/features/catalog/queries";
+import { categoryHref, queryCatalog } from "@/features/catalog/queries";
 import type { CatalogQuery } from "@/features/catalog/types";
+import { paginate } from "@/utils/pagination";
 
 const FILTER_KEYS = ["brand", "condition", "minPrice", "maxPrice", "sort"] as const;
+const PAGE_SIZE = 12;
 const SORT_OPTIONS = [
   { value: "featured", label: "Featured" },
   { value: "price-asc", label: "Price: Low to High" },
@@ -79,6 +82,7 @@ function ProductListingInner({ title, description, filters }: ProductListingProp
   const sort = params.get("sort") ?? "featured";
   const searchQuery = params.get("q")?.trim() || filters?.q;
   const categorySlug = filters?.categorySlug ?? params.get("category") ?? undefined;
+  const requestedPage = Math.max(1, Number(params.get("page") || "1") || 1);
 
   const unfiltered = useMemo(
     () =>
@@ -136,15 +140,35 @@ function ProductListingInner({ title, description, filters }: ProductListingProp
     sort,
   ]);
 
+  const pageSlice = paginate(products, requestedPage, PAGE_SIZE);
   const category = catalog.categories.find((item) => item.slug === categorySlug);
   const heading =
     selectedBrands.length === 1 && !filters?.brand ? `${selectedBrands[0]} products` : title;
 
-  function replaceParams(update: (next: URLSearchParams) => void) {
+  function replaceParams(
+    update: (next: URLSearchParams) => void,
+    options?: { resetPage?: boolean; scroll?: boolean },
+  ) {
     const next = new URLSearchParams(params.toString());
     update(next);
+    if (options?.resetPage !== false) {
+      next.delete("page");
+    }
     const query = next.toString();
-    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: options?.scroll ?? false });
+  }
+
+  function goToPage(page: number) {
+    replaceParams(
+      (next) => {
+        if (page <= 1) {
+          next.delete("page");
+        } else {
+          next.set("page", String(page));
+        }
+      },
+      { resetPage: false, scroll: true },
+    );
   }
 
   function toggleValue(key: "brand" | "condition", value: string) {
@@ -185,6 +209,13 @@ function ProductListingInner({ title, description, filters }: ProductListingProp
 
   const filterProps = {
     products: unfiltered,
+    categories: catalog.categories
+      .filter((item) => item.live)
+      .map((item) => ({
+        slug: item.slug,
+        name: item.name,
+        href: categoryHref(item.slug),
+      })),
     selectedBrands,
     selectedConditions,
     minPrice,
@@ -208,7 +239,9 @@ function ProductListingInner({ title, description, filters }: ProductListingProp
             <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{description}</p>
           ) : null}
           <p className="mt-2 text-sm text-muted-foreground">
-            {products.length} {products.length === 1 ? "result" : "results"}
+            {pageSlice.total === 0
+              ? "No results"
+              : `Showing ${pageSlice.from}–${pageSlice.to} of ${pageSlice.total} ${pageSlice.total === 1 ? "result" : "results"}`}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -268,7 +301,8 @@ function ProductListingInner({ title, description, filters }: ProductListingProp
               ))}
             </select>
           </label>
-          <ProductGrid products={products} columns="listing" />
+          <ProductGrid products={pageSlice.items} columns="listing" />
+          <PaginationBar className="mt-6" meta={pageSlice} onPageChange={goToPage} showSummary={false} />
         </div>
       </div>
 

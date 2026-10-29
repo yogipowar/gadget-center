@@ -222,6 +222,7 @@ export function ProductsScreen() {
         getRowId={(row) => row.id}
         selectedIds={selectedIds}
         onSelectedIdsChange={setSelectedIds}
+        pageSize={10}
         columns={[
           {
             header: "Product",
@@ -338,9 +339,9 @@ export function ProductsScreen() {
               onChange={(event) => setForm((current) => ({ ...current, categorySlug: event.target.value }))}
             >
               <option value="">Select category</option>
-              {catalog.categories.filter((category) => category.live).map((category) => (
+              {catalog.categories.map((category) => (
                 <option key={category.id} value={category.slug}>
-                  {category.name}
+                  {category.live ? category.name : `${category.name} (hidden)`}
                 </option>
               ))}
             </select>

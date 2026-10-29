@@ -2,7 +2,6 @@ import { REFURBISHED_GRADE_LABELS } from "@/constants/products";
 import { catalogProducts } from "@/features/catalog/products";
 import type { CatalogProduct, CatalogQuery } from "@/features/catalog/types";
 import { routes } from "@/config/routes";
-import { formatInr } from "@/utils/currency";
 
 export { catalogProducts };
 
@@ -104,7 +103,44 @@ export const additionalCategories = [
 
 export const shopCategories = [...computerCategories, ...additionalCategories];
 
+export function builtinAdminCategories() {
+  return shopCategories.map((category) => ({
+    id: category.slug,
+    name: category.title,
+    slug: category.slug,
+    description: category.description,
+    live: true,
+    builtin: true as const,
+  }));
+}
+
+export function mergeAdminCategories<T extends { slug: string }>(custom: T[]) {
+  const builtin = builtinAdminCategories();
+  const used = new Set<string>(builtin.map((item) => item.slug));
+  return [...builtin, ...custom.filter((item) => !used.has(item.slug))];
+}
+
+export function categoryHref(slug: string) {
+  return `${routes.products}/${slug}`;
+}
+
 export const laptopBrands = ["Dell", "HP"] as const;
+
+export const shopBrands = [
+  "Hikvision",
+  "CP Plus",
+  "TP-Link",
+  "ENTER",
+  "Epson",
+  "Sony",
+  "Logitech",
+  "Matrics",
+  "Asus",
+  "Lenovo",
+  "MSI",
+  "Dell",
+  "HP",
+] as const;
 
 export const budgetBands = [
   { label: "Under ₹20,000", minPrice: 0, maxPrice: 19999 },
@@ -284,36 +320,7 @@ export function getProductBySlug(slug: string, products: CatalogProduct[] = cata
 }
 
 export function productListingCopy(product: CatalogProduct) {
-  const facts = productFacts(product);
-  const typeLabel = product.productType.toLowerCase().replaceAll("_", " ");
-  const condition =
-    product.condition === "REFURBISHED"
-      ? "refurbished"
-      : product.condition === "USED"
-        ? "used"
-        : "new";
-  const specBits = [
-    facts.processor,
-    facts.ram ? `${facts.ram} RAM` : "",
-    facts.storageCapacity
-      ? `${facts.storageCapacity}${facts.storageType ? ` ${facts.storageType}` : ""}`
-      : "",
-    facts.screenSize,
-  ].filter(Boolean);
-  const extras = product.shortDescription.trim();
-  const warranty = facts.warranty
-    ? ` Warranty on this listing: ${facts.warranty}.`
-    : " Confirm warranty with us on the listed phone or email before you pay.";
-  return [
-    `${product.name} is a ${condition} ${product.brand} ${typeLabel} sold by GadgetCenter for ${formatInr(product.salePrice, { compact: true })}.`,
-    specBits.length ? `Key specifications: ${specBits.join(", ")}.` : "",
-    extras,
-    facts.adapterIncluded ? "Power adapter is included." : "",
-    "This is a physical product shipped from Kolhapur, Maharashtra, to addresses in India. Payment is online only (UPI, cards or netbanking).",
-    warranty,
-  ]
-    .filter(Boolean)
-    .join(" ");
+  return product.shortDescription.trim() || product.name;
 }
 
 export function relatedProducts(

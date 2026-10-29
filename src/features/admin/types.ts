@@ -44,16 +44,31 @@ export type AdminCustomer = {
   lastOrderAt: string;
 };
 
+export type AdminOrderLine = {
+  name: string;
+  slug: string;
+  quantity: number;
+  unitPrice: number;
+};
+
 export type AdminOrder = {
   id: string;
   orderNumber: string;
   customer: string;
   mobile: string;
+  email?: string | null;
+  address?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
   items: string;
+  lineItems?: AdminOrderLine[];
   total: number;
   status: OrderStatus;
   paymentStatus: PaymentStatus;
   paymentMethod: PaymentMethod;
+  paymentReported?: boolean;
+  notes?: string | null;
   createdAt: string;
 };
 
@@ -73,6 +88,7 @@ export type AdminCategory = {
   slug: string;
   description: string;
   live: boolean;
+  builtin?: boolean;
 };
 
 export type AdminBrand = {

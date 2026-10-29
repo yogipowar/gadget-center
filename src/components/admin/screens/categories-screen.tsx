@@ -23,6 +23,7 @@ const empty: Omit<AdminCategory, "id"> = {
 export function CategoriesScreen() {
   const catalog = useAdminCatalog();
   const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(empty);
 
@@ -41,27 +42,60 @@ export function CategoriesScreen() {
   }
 
   function openEdit(row: AdminCategory) {
+    if (row.builtin) {
+      toast.error("Built-in categories cannot be changed.");
+      return;
+    }
     setEditingId(row.id);
     setForm({ name: row.name, slug: row.slug, description: row.description, live: row.live });
     setOpen(true);
   }
 
-  function onSave() {
+  async function onSave() {
     const name = form.name.trim();
     const slug = slugify(form.slug || name);
     if (name.length < 2 || !slug) {
       toast.error("Enter a category name.");
       return;
     }
-    saveCategory({ id: editingId ?? slug, name, slug, description: form.description.trim(), live: form.live });
-    toast.success(editingId ? "Category updated." : "Category added.");
-    setOpen(false);
+    setSaving(true);
+    try {
+      await saveCategory({
+        ...(editingId ? { id: editingId } : {}),
+        name,
+        slug,
+        description: form.description.trim(),
+        live: form.live,
+      });
+      toast.success(editingId ? "Category updated." : "Category added. It now shows in add/update product.");
+      setOpen(false);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not save the category.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function onDelete(row: AdminCategory) {
+    if (row.builtin) {
+      toast.error("Built-in categories cannot be deleted.");
+      return;
+    }
+    if (!window.confirm(`Delete ${row.name}?`)) {
+      return;
+    }
+    try {
+      await deleteCategory(row.id);
+      toast.success("Category deleted.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not delete the category.");
+    }
   }
 
   return (
     <AdminPage
       title="Categories"
-      description="Add shop categories here. They are saved in this browser and show on the store once live."
+      description="Existing shop menus stay as they are. Add new category menus here — they appear in add/update product and on the store once live."
       actions={<Button onClick={openCreate}>Add category</Button>}
     >
       <AdminTable
@@ -73,28 +107,23 @@ export function CategoriesScreen() {
           { header: "Name", cell: (row) => row.name },
           { header: "Slug", cell: (row) => row.slug },
           { header: "Products", cell: (row) => counts.get(row.slug) ?? 0 },
+          { header: "Type", cell: (row) => (row.builtin ? "Built-in" : "Custom") },
           { header: "On store", cell: (row) => (row.live ? "Visible" : "Hidden") },
           {
             header: "Actions",
-            cell: (row) => (
-              <div className="flex justify-end gap-1">
-                <Button variant="outline" size="sm" onClick={() => openEdit(row)}>
-                  Edit
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    if (window.confirm(`Delete ${row.name}?`)) {
-                      deleteCategory(row.id);
-                      toast.success("Category deleted.");
-                    }
-                  }}
-                >
-                  Delete
-                </Button>
-              </div>
-            ),
+            cell: (row) =>
+              row.builtin ? (
+                <span className="text-xs text-muted-foreground">Kept as-is</span>
+              ) : (
+                <div className="flex justify-end gap-1">
+                  <Button variant="outline" size="sm" onClick={() => openEdit(row)}>
+                    Edit
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => void onDelete(row)}>
+                    Delete
+                  </Button>
+                </div>
+              ),
           },
         ]}
       />
@@ -102,7 +131,9 @@ export function CategoriesScreen() {
         open={open}
         onOpenChange={setOpen}
         title={editingId ? "Edit category" : "Add category"}
-        onSubmit={onSave}
+        onSubmit={() => void onSave()}
+        submitDisabled={saving}
+        submitLabel={saving ? "Saving…" : "Save"}
       >
         <AdminField label="Name">
           <Input

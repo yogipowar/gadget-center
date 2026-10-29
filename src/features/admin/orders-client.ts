@@ -18,6 +18,10 @@ export function useAdminOrders() {
 
   useEffect(() => {
     void refresh();
+    const timer = window.setInterval(() => {
+      void refresh();
+    }, 12_000);
+    return () => window.clearInterval(timer);
   }, [refresh]);
 
   async function markPaid(id: string) {

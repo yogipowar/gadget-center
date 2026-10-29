@@ -27,9 +27,13 @@ export default async function OrderSuccessPage({ searchParams }: OrderSuccessPag
     >
       <p>
         If you have already paid, keep the order number handy. You can also WhatsApp a screenshot to +91{" "}
-        {siteConfig.contact.orderPhone}.
+        {siteConfig.contact.orderPhone} or email {siteConfig.contact.email}.
       </p>
       <p>
+        <Link href={routes.orders} className="font-medium text-foreground underline">
+          Check order status
+        </Link>
+        {" · "}
         <Link href={routes.products} className="font-medium text-foreground underline">
           Continue shopping
         </Link>

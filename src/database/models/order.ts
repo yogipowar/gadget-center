@@ -2,6 +2,7 @@ import "server-only";
 
 import { DataTypes, Model } from "sequelize";
 
+import { OrderItem } from "@/database/models/order-item";
 import { sequelize } from "@/database/sequelize";
 
 export class ShopOrder extends Model {
@@ -24,6 +25,7 @@ export class ShopOrder extends Model {
   declare notes: string | null;
   declare createdAt: Date;
   declare updatedAt: Date;
+  declare items?: OrderItem[];
 }
 
 ShopOrder.init(

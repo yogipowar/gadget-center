@@ -5,6 +5,7 @@ import { ShopOrder } from "@/database/models/order";
 import { Lead } from "@/database/models/lead";
 import { Product } from "@/database/models/product";
 import { StaffUser } from "@/database/models/staff-user";
+import { ShopCategory } from "@/database/models/shop-category";
 import { UploadedImage } from "@/database/models/uploaded-image";
 import { sequelize } from "@/database/sequelize";
 
@@ -18,10 +19,11 @@ export const models = {
   OrderItem,
   Lead,
   UploadedImage,
+  ShopCategory,
 } as const;
 
 export function getSequelize() {
   return sequelize;
 }
 
-export { sequelize, Product, StaffUser, ShopOrder, OrderItem, Lead, UploadedImage };
+export { sequelize, Product, StaffUser, ShopOrder, OrderItem, Lead, UploadedImage, ShopCategory };

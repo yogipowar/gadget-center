@@ -1,21 +1,13 @@
-import { SimplePage, simpleMetadata } from "@/components/layout/simple-page";
-import Link from "next/link";
+import { AccountScreen } from "@/components/account/account-screen";
+import { simpleMetadata } from "@/components/layout/simple-page";
 
-import { routes } from "@/config/routes";
-
-export const metadata = simpleMetadata("Orders", "Your GadgetCenter order history.");
+export const metadata = simpleMetadata("Orders", "Check GadgetCenter order status with your mobile and order number.");
 
 export default function OrdersPage() {
   return (
-    <SimplePage
-      title="Orders"
-      description="Order history will appear here after customer accounts and checkout are connected to MySQL."
-    >
-      <p>
-        <Link href={routes.account} className="font-medium text-foreground underline">
-          Go to account
-        </Link>
-      </p>
-    </SimplePage>
+    <AccountScreen
+      title="Order status"
+      description="Enter the mobile number and order number from your checkout to see whether payment is pending, reported or confirmed."
+    />
   );
 }
