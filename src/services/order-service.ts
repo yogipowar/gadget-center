@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { Op } from "sequelize";
 
 import { ORDER_NUMBER_PREFIX } from "@/constants/orders";
+import { existingAttributeKeys } from "@/database/ensure-schema";
 import { OrderItem } from "@/database/models/order-item";
 import { ShopOrder } from "@/database/models/order";
 import { ensureDatabase } from "@/database/sequelize";
@@ -74,6 +75,19 @@ function toAdminOrder(row: ShopOrder, lineItems: AdminOrderLine[] = []): AdminOr
   };
 }
 
+async function shopOrderQuery() {
+  const attributes = await existingAttributeKeys(ShopOrder);
+  const createdAtKey = attributes.includes("createdAt")
+    ? "createdAt"
+    : attributes.includes("created_at")
+      ? "created_at"
+      : null;
+  return {
+    attributes,
+    order: createdAtKey ? ([[createdAtKey, "DESC"]] as [string, "DESC"][]) : undefined,
+  };
+}
+
 async function lineItemsForOrders(orderIds: string[]) {
   if (orderIds.length === 0) {
     return new Map<string, AdminOrderLine[]>();
@@ -90,16 +104,18 @@ async function lineItemsForOrders(orderIds: string[]) {
 
 export async function listOrders() {
   await ensureDatabase();
-  const rows = await ShopOrder.findAll({ order: [["created_at", "DESC"]] });
+  const query = await shopOrderQuery();
+  const rows = await ShopOrder.findAll(query);
   const grouped = await lineItemsForOrders(rows.map((row) => row.id));
   return rows.map((row) => toAdminOrder(row, grouped.get(row.id) ?? []));
 }
 
 export async function listOrdersByMobile(mobile: string) {
   await ensureDatabase();
+  const query = await shopOrderQuery();
   const rows = await ShopOrder.findAll({
+    ...query,
     where: { mobile: normalizeMobile(mobile) },
-    order: [["created_at", "DESC"]],
   });
   const grouped = await lineItemsForOrders(rows.map((row) => row.id));
   return rows.map((row) => toAdminOrder(row, grouped.get(row.id) ?? []));
@@ -107,7 +123,9 @@ export async function listOrdersByMobile(mobile: string) {
 
 export async function findCustomerOrder(orderNumber: string, mobile: string) {
   await ensureDatabase();
+  const query = await shopOrderQuery();
   const order = await ShopOrder.findOne({
+    attributes: query.attributes,
     where: {
       orderNumber: normalizeOrderNumber(orderNumber),
       mobile: normalizeMobile(mobile),
@@ -121,7 +139,9 @@ export async function findCustomerOrder(orderNumber: string, mobile: string) {
 
 export async function reportPayment(orderNumber: string, mobile: string) {
   await ensureDatabase();
+  const query = await shopOrderQuery();
   const order = await ShopOrder.findOne({
+    attributes: query.attributes,
     where: {
       orderNumber: normalizeOrderNumber(orderNumber),
       mobile: normalizeMobile(mobile),
@@ -161,7 +181,8 @@ async function markOrderPaid(order: ShopOrder, method: AdminOrder["paymentMethod
 
 export async function getOrderById(id: string) {
   await ensureDatabase();
-  const order = await ShopOrder.findByPk(id);
+  const query = await shopOrderQuery();
+  const order = await ShopOrder.findByPk(id, { attributes: query.attributes });
   if (!order) {
     throw new NotFoundError("Order not found.");
   }
@@ -171,7 +192,8 @@ export async function getOrderById(id: string) {
 
 export async function markOrderPaidById(orderId: string) {
   await ensureDatabase();
-  const order = await ShopOrder.findByPk(orderId);
+  const query = await shopOrderQuery();
+  const order = await ShopOrder.findByPk(orderId, { attributes: query.attributes });
   if (!order) {
     throw new NotFoundError("Order not found.");
   }
@@ -264,7 +286,11 @@ export async function confirmRazorpayPayment(input: {
   razorpayPaymentId: string;
 }) {
   await ensureDatabase();
-  const order = await ShopOrder.findOne({ where: { razorpayOrderId: input.razorpayOrderId } });
+  const query = await shopOrderQuery();
+  const order = await ShopOrder.findOne({
+    attributes: query.attributes,
+    where: { razorpayOrderId: input.razorpayOrderId },
+  });
   if (!order) {
     throw new NotFoundError("Order not found for this payment.");
   }

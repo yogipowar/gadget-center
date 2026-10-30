@@ -9,10 +9,16 @@ import type { AdminOrder } from "@/features/admin/types";
 export function useAdminOrders() {
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     const response = await apiClient.get<AdminOrder[]>(routes.api.adminOrders);
-    setOrders(response.success && response.data ? response.data : []);
+    if (response.success && response.data) {
+      setOrders(response.data);
+      setError(null);
+    } else {
+      setError(response.message || "Could not load orders.");
+    }
     setLoaded(true);
   }, []);
 
@@ -33,5 +39,5 @@ export function useAdminOrders() {
     return response.data;
   }
 
-  return { orders, loaded, markPaid };
+  return { orders, loaded, error, markPaid };
 }

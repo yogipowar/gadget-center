@@ -132,7 +132,7 @@ function OrderDetails({
 }
 
 export function OrdersScreen() {
-  const { orders, loaded, markPaid } = useAdminOrders();
+  const { orders, loaded, error, markPaid } = useAdminOrders();
   const [selected, setSelected] = useState<AdminOrder | null>(null);
 
   async function onMarkPaid(order: AdminOrder) {
@@ -151,7 +151,13 @@ export function OrdersScreen() {
         rows={orders}
         searchPlaceholder="Search order number, customer or mobile"
         searchText={(row) => `${row.orderNumber} ${row.customer} ${row.mobile} ${row.email ?? ""} ${row.items}`}
-        empty={loaded ? "No orders yet." : "Loading orders…"}
+        empty={
+          !loaded
+            ? "Loading orders…"
+            : error
+              ? "Could not load orders. Refresh the page."
+              : "No orders yet."
+        }
         onRowClick={(row) => setSelected(row)}
         columns={[
           {
