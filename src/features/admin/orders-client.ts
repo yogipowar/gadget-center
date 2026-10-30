@@ -17,6 +17,7 @@ export function useAdminOrders() {
       setOrders(response.data);
       setError(null);
     } else {
+      setOrders([]);
       setError(response.message || "Could not load orders.");
     }
     setLoaded(true);

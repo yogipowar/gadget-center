@@ -10,6 +10,14 @@ function tableNameOf(model: ModelStatic<Model>) {
   return typeof name === "string" ? name : name.tableName;
 }
 
+function columnNames(description: Record<string, unknown>) {
+  return new Set(Object.keys(description).map((name) => name.toLowerCase()));
+}
+
+function hasColumn(description: Record<string, unknown>, field: string) {
+  return columnNames(description).has(field.toLowerCase());
+}
+
 const attributeKeysCache = new Map<string, string[]>();
 
 function isPrimitiveDefault(value: unknown) {
@@ -24,7 +32,7 @@ export async function existingAttributeKeys(model: ModelStatic<Model>) {
   }
   const description = await sequelize.getQueryInterface().describeTable(table);
   const keys = Object.entries(model.rawAttributes)
-    .filter(([, attribute]) => Boolean(attribute.field && attribute.field in description))
+    .filter(([, attribute]) => Boolean(attribute.field && hasColumn(description, attribute.field)))
     .map(([key]) => key);
   attributeKeysCache.set(table, keys);
   return keys;
@@ -47,7 +55,7 @@ export async function ensureModelColumns() {
 
     for (const attribute of Object.values(model.rawAttributes)) {
       const field = attribute.field;
-      if (!field || field in description || attribute.primaryKey) {
+      if (!field || hasColumn(description, field) || attribute.primaryKey) {
         continue;
       }
 

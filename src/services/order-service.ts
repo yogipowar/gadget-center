@@ -66,16 +66,16 @@ function toAdminOrder(row: ShopOrder, lineItems: AdminOrderLine[] = []): AdminOr
     items: row.itemsSummary,
     lineItems,
     total: row.total,
-    status: row.status as AdminOrder["status"],
-    paymentStatus: row.paymentStatus as AdminOrder["paymentStatus"],
-    paymentMethod: row.paymentMethod as AdminOrder["paymentMethod"],
+    status: (row.status as AdminOrder["status"]) || "PENDING",
+    paymentStatus: (row.paymentStatus as AdminOrder["paymentStatus"]) || "PENDING",
+    paymentMethod: (row.paymentMethod as AdminOrder["paymentMethod"]) || "UPI",
     paymentReported: Boolean(row.notes?.startsWith(PAYMENT_REPORTED_PREFIX)),
     notes: row.notes,
     createdAt: row.createdAt ? new Date(row.createdAt).toISOString() : new Date().toISOString(),
   };
 }
 
-async function shopOrderQuery() {
+async function shopOrderQueryOptions() {
   const attributes = await existingAttributeKeys(ShopOrder);
   const createdAtKey = attributes.includes("createdAt")
     ? "createdAt"
@@ -92,7 +92,11 @@ async function lineItemsForOrders(orderIds: string[]) {
   if (orderIds.length === 0) {
     return new Map<string, AdminOrderLine[]>();
   }
-  const rows = await OrderItem.findAll({ where: { orderId: { [Op.in]: orderIds } } });
+  const attributes = await existingAttributeKeys(OrderItem);
+  const rows = await OrderItem.findAll({
+    ...(attributes.includes("id") ? { attributes } : {}),
+    where: { orderId: { [Op.in]: orderIds } },
+  });
   const grouped = new Map<string, AdminOrderLine[]>();
   for (const row of rows) {
     const current = grouped.get(row.orderId) ?? [];
@@ -104,18 +108,19 @@ async function lineItemsForOrders(orderIds: string[]) {
 
 export async function listOrders() {
   await ensureDatabase();
-  const query = await shopOrderQuery();
-  const rows = await ShopOrder.findAll(query);
+  const { attributes, order } = await shopOrderQueryOptions();
+  const rows = await ShopOrder.findAll({ attributes, order });
   const grouped = await lineItemsForOrders(rows.map((row) => row.id));
   return rows.map((row) => toAdminOrder(row, grouped.get(row.id) ?? []));
 }
 
 export async function listOrdersByMobile(mobile: string) {
   await ensureDatabase();
-  const query = await shopOrderQuery();
+  const { attributes, order } = await shopOrderQueryOptions();
   const rows = await ShopOrder.findAll({
-    ...query,
+    attributes,
     where: { mobile: normalizeMobile(mobile) },
+    order,
   });
   const grouped = await lineItemsForOrders(rows.map((row) => row.id));
   return rows.map((row) => toAdminOrder(row, grouped.get(row.id) ?? []));
@@ -123,9 +128,9 @@ export async function listOrdersByMobile(mobile: string) {
 
 export async function findCustomerOrder(orderNumber: string, mobile: string) {
   await ensureDatabase();
-  const query = await shopOrderQuery();
+  const { attributes } = await shopOrderQueryOptions();
   const order = await ShopOrder.findOne({
-    attributes: query.attributes,
+    attributes,
     where: {
       orderNumber: normalizeOrderNumber(orderNumber),
       mobile: normalizeMobile(mobile),
@@ -139,9 +144,9 @@ export async function findCustomerOrder(orderNumber: string, mobile: string) {
 
 export async function reportPayment(orderNumber: string, mobile: string) {
   await ensureDatabase();
-  const query = await shopOrderQuery();
+  const { attributes } = await shopOrderQueryOptions();
   const order = await ShopOrder.findOne({
-    attributes: query.attributes,
+    attributes,
     where: {
       orderNumber: normalizeOrderNumber(orderNumber),
       mobile: normalizeMobile(mobile),
@@ -181,8 +186,8 @@ async function markOrderPaid(order: ShopOrder, method: AdminOrder["paymentMethod
 
 export async function getOrderById(id: string) {
   await ensureDatabase();
-  const query = await shopOrderQuery();
-  const order = await ShopOrder.findByPk(id, { attributes: query.attributes });
+  const { attributes } = await shopOrderQueryOptions();
+  const order = await ShopOrder.findByPk(id, { attributes });
   if (!order) {
     throw new NotFoundError("Order not found.");
   }
@@ -192,8 +197,8 @@ export async function getOrderById(id: string) {
 
 export async function markOrderPaidById(orderId: string) {
   await ensureDatabase();
-  const query = await shopOrderQuery();
-  const order = await ShopOrder.findByPk(orderId, { attributes: query.attributes });
+  const { attributes } = await shopOrderQueryOptions();
+  const order = await ShopOrder.findByPk(orderId, { attributes });
   if (!order) {
     throw new NotFoundError("Order not found.");
   }
@@ -286,9 +291,12 @@ export async function confirmRazorpayPayment(input: {
   razorpayPaymentId: string;
 }) {
   await ensureDatabase();
-  const query = await shopOrderQuery();
+  const { attributes } = await shopOrderQueryOptions();
+  if (!attributes.includes("razorpayOrderId")) {
+    throw new NotFoundError("Order not found for this payment.");
+  }
   const order = await ShopOrder.findOne({
-    attributes: query.attributes,
+    attributes,
     where: { razorpayOrderId: input.razorpayOrderId },
   });
   if (!order) {

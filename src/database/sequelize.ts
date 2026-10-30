@@ -104,11 +104,11 @@ export function ensureDatabase() {
     ready = (async () => {
       await import("@/database/models");
       const { seedDatabase } = await import("@/database/seed");
+      const { ensureModelColumns } = await import("@/database/ensure-schema");
       await pingDatabase();
       await sequelize.sync();
-      const { ensureModelColumns } = await import("@/database/ensure-schema");
-      await ensureModelColumns();
       await seedDatabase();
+      await ensureModelColumns();
     })().catch((error) => {
       ready = null;
       throw error;
