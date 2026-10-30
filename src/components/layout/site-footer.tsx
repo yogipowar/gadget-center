@@ -6,12 +6,24 @@ import { legal } from "@/config/legal";
 import { routes } from "@/config/routes";
 import { siteConfig } from "@/config/site";
 import { useAdminCatalog } from "@/features/admin/catalog-store";
-import { additionalCategories, categoryHref, computerCategories } from "@/features/catalog/queries";
+import {
+  additionalCategories,
+  categoryHref,
+  computerCategories,
+  stockedCategorySlugs,
+} from "@/features/catalog/queries";
 import { formatPhone, telHref } from "@/lib/contact";
 
 export function SiteFooter() {
   const catalog = useAdminCatalog();
-  const extraCategories = catalog.categories.filter((category) => category.live && !category.builtin);
+  const stockedSlugs = stockedCategorySlugs(catalog.products);
+  const computerLinks = computerCategories.filter((category) => stockedSlugs.has(category.slug));
+  const extraCategories = catalog.categories.filter(
+    (category) => category.live && !category.builtin && stockedSlugs.has(category.slug),
+  );
+  const alsoAvailable = [
+    ...additionalCategories.filter((category) => stockedSlugs.has(category.slug)),
+  ];
   return (
     <footer className="mt-auto bg-brand-navy text-white">
       <div className="mx-auto grid w-full max-w-6xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-4">
@@ -38,37 +50,41 @@ export function SiteFooter() {
             {legal.hours}. {legal.closed}.
           </p>
         </div>
-        <div>
-          <p className="text-sm font-semibold">Computers</p>
-          <ul className="mt-3 space-y-2 text-sm text-white/70">
-            {computerCategories.map((category) => (
-              <li key={category.slug}>
-                <Link href={category.href} className="hover:text-white">
-                  {category.title}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div>
-          <p className="text-sm font-semibold">Also available</p>
-          <ul className="mt-3 space-y-2 text-sm text-white/70">
-            {additionalCategories.map((category) => (
-              <li key={category.slug}>
-                <Link href={category.href} className="hover:text-white">
-                  {category.title}
-                </Link>
-              </li>
-            ))}
-            {extraCategories.map((category) => (
-              <li key={category.slug}>
-                <Link href={categoryHref(category.slug)} className="hover:text-white">
-                  {category.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
+        {computerLinks.length > 0 ? (
+          <div>
+            <p className="text-sm font-semibold">Computers</p>
+            <ul className="mt-3 space-y-2 text-sm text-white/70">
+              {computerLinks.map((category) => (
+                <li key={category.slug}>
+                  <Link href={category.href} className="hover:text-white">
+                    {category.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+        {alsoAvailable.length > 0 || extraCategories.length > 0 ? (
+          <div>
+            <p className="text-sm font-semibold">Also available</p>
+            <ul className="mt-3 space-y-2 text-sm text-white/70">
+              {alsoAvailable.map((category) => (
+                <li key={category.slug}>
+                  <Link href={category.href} className="hover:text-white">
+                    {category.title}
+                  </Link>
+                </li>
+              ))}
+              {extraCategories.map((category) => (
+                <li key={category.slug}>
+                  <Link href={categoryHref(category.slug)} className="hover:text-white">
+                    {category.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
         <div>
           <p className="text-sm font-semibold">Company</p>
           <ul className="mt-3 space-y-2 text-sm text-white/70">

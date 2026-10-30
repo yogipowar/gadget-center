@@ -47,10 +47,7 @@ export default async function HomePage() {
   const bestLaptops = queryCatalog({ productType: "LAPTOP", bestseller: true }, products).slice(0, 4);
   const liveCategories = categories.filter(
     (category) =>
-      category.live &&
-      (category.builtin
-        ? queryCatalog({ categorySlug: category.slug }, products).length > 0
-        : true),
+      category.live && queryCatalog({ categorySlug: category.slug }, products).length > 0,
   );
 
   return (

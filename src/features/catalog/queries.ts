@@ -124,6 +124,10 @@ export function categoryHref(slug: string) {
   return `${routes.products}/${slug}`;
 }
 
+export function stockedCategorySlugs(products: Pick<CatalogProduct, "categorySlug">[]) {
+  return new Set(products.map((product) => product.categorySlug));
+}
+
 export const laptopBrands = ["Dell", "HP"] as const;
 
 export const shopBrands = [

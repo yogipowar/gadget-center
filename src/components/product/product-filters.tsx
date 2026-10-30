@@ -40,13 +40,16 @@ export function ProductFilters({
   onSelectPrice,
   onClear,
 }: ProductFiltersProps) {
+  const stockedSlugs = new Set(products.map((product) => product.categorySlug));
   const categoryLinks =
     categories ??
-    shopCategories.map((category) => ({
-      slug: category.slug,
-      name: category.title,
-      href: categoryHref(category.slug),
-    }));
+    shopCategories
+      .filter((category) => stockedSlugs.has(category.slug) || category.slug === lockedCategory)
+      .map((category) => ({
+        slug: category.slug,
+        name: category.title,
+        href: categoryHref(category.slug),
+      }));
   const availableBrands = [...new Set(products.map((product) => product.brand).filter(Boolean))].sort((a, b) =>
     a.localeCompare(b),
   );

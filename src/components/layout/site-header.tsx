@@ -19,18 +19,18 @@ import { routes } from "@/config/routes";
 import { siteConfig } from "@/config/site";
 import { formatPhone, telHref } from "@/lib/contact";
 import { cartCount, useCart } from "@/features/cart/store";
-import { categoryHref, searchSuggestions } from "@/features/catalog/queries";
+import { categoryHref, searchSuggestions, stockedCategorySlugs } from "@/features/catalog/queries";
 import { useAdminCatalog } from "@/features/admin/catalog-store";
 import { assetPath } from "@/lib/asset-path";
 import { cn } from "@/lib/utils";
 
-const navItems = [
+const navItems: { href: string; label: string; categorySlug?: string }[] = [
   { href: routes.products, label: "Products" },
-  { href: routes.refurbishedLaptops, label: "Refurbished" },
-  { href: routes.desktops, label: "Desktop" },
-  { href: routes.accessories, label: "Accessories" },
-  { href: routes.printers, label: "Printers" },
-  { href: routes.cctv, label: "CCTV" },
+  { href: routes.refurbishedLaptops, label: "Refurbished", categorySlug: "refurbished-laptops" },
+  { href: routes.desktops, label: "Desktop", categorySlug: "desktops" },
+  { href: routes.accessories, label: "Accessories", categorySlug: "accessories" },
+  { href: routes.printers, label: "Printers", categorySlug: "printers" },
+  { href: routes.cctv, label: "CCTV", categorySlug: "cctv" },
   { href: routes.services, label: "Services" },
   { href: routes.contact, label: "Contact" },
 ];
@@ -47,8 +47,14 @@ export function SiteHeader() {
     () => searchSuggestions(query, 6, catalog.products),
     [catalog.products, query],
   );
-  const liveCategories = catalog.categories.filter((category) => category.live);
+  const stockedSlugs = stockedCategorySlugs(catalog.products);
+  const liveCategories = catalog.categories.filter(
+    (category) => category.live && stockedSlugs.has(category.slug),
+  );
   const extraNav = liveCategories.filter((category) => !category.builtin);
+  const visibleNavItems = navItems.filter(
+    (item) => !item.categorySlug || stockedSlugs.has(item.categorySlug),
+  );
 
   function onSearch(event: FormEvent) {
     event.preventDefault();
@@ -163,7 +169,7 @@ export function SiteHeader() {
           <Link href={routes.products} className="text-sm font-medium text-white hover:underline">
             Categories
           </Link>
-          {navItems.map((item) => (
+          {visibleNavItems.map((item) => (
             <Link key={item.href} href={item.href} className="text-sm text-white/85 hover:text-white">
               {item.label}
             </Link>

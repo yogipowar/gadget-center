@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/sheet";
 import type { ProductCondition } from "@/constants/products";
 import { useAdminCatalog } from "@/features/admin/catalog-store";
-import { categoryHref, queryCatalog } from "@/features/catalog/queries";
+import { categoryHref, queryCatalog, stockedCategorySlugs } from "@/features/catalog/queries";
 import type { CatalogQuery } from "@/features/catalog/types";
 import { paginate } from "@/utils/pagination";
 
@@ -207,10 +207,14 @@ function ProductListingInner({ title, description, filters }: ProductListingProp
     });
   }
 
+  const stockedSlugs = stockedCategorySlugs(catalog.products);
   const filterProps = {
     products: unfiltered,
     categories: catalog.categories
-      .filter((item) => item.live)
+      .filter(
+        (item) =>
+          item.live && (stockedSlugs.has(item.slug) || item.slug === categorySlug),
+      )
       .map((item) => ({
         slug: item.slug,
         name: item.name,
